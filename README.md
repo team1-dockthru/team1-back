@@ -1,4 +1,4 @@
-# Team1 Backend
+# Team1 Dockthru-Backend
 
 백엔드 API 서버 프로젝트입니다.
 
@@ -49,17 +49,6 @@ npm run dev
 # 프로덕션 모드
 npm start
 ```
-
-## API 엔드포인트
-
-- `GET /health` - 서버 상태 확인
-- `GET /api/` - API 루트
-- `POST /api/auth/register` - 회원가입
-- `POST /api/auth/login` - 로그인
-- `POST /api/auth/refresh` - 토큰 갱신
-- `GET /api/users/me` - 현재 사용자 정보 (인증 필요)
-- `PUT /api/users/me` - 사용자 정보 수정 (인증 필요)
-- `DELETE /api/users/me` - 사용자 삭제 (인증 필요)
 
 ## 프로젝트 구조
 
