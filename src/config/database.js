@@ -1,15 +1,10 @@
-import { PrismaClient } from "../generated/prisma/client.js";
-import { ENV } from "./env.js";
+import { PrismaClient } from "@prisma/client";
 
+// PrismaClient는 DATABASE_URL 환경 변수를 자동으로 읽습니다
 const prisma = new PrismaClient({
-  datasourceUrl: ENV.DATABASE_URL,
-  log:
-    process.env.NODE_ENV === "development"
-      ? ["query", "error", "warn"]
-      : ["error"],
+  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
 });
 
-// Graceful shutdown
 process.on("beforeExit", async () => {
   await prisma.$disconnect();
 });
