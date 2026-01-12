@@ -1,4 +1,4 @@
-export default function errorMiddleware(err, req, res, next) {
+export default function errorMiddleware(err, req, res, _next) {
   console.error("Error:", err);
 
   const status = err.status || err.statusCode || 500;

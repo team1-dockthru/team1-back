@@ -10,9 +10,9 @@ router.use(authenticateToken);
 router.get("/me", async (req, res, next) => {
   try {
     // TODO: 현재 사용자 정보 조회 로직 구현
-    res.json({ 
+    res.json({
       message: "현재 사용자 정보",
-      user: req.user 
+      user: req.user,
     });
   } catch (error) {
     next(error);

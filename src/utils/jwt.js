@@ -8,7 +8,7 @@ export const generateToken = (payload, expiresIn = "7d") => {
 export const verifyToken = (token) => {
   try {
     return jwt.verify(token, ENV.JWT_SECRET);
-  } catch (error) {
+  } catch {
     return null;
   }
 };

@@ -6,13 +6,13 @@ const router = Router();
 
 // API 루트
 router.get("/", (req, res) => {
-  res.json({ 
+  res.json({
     message: "API root",
     version: "1.0.0",
     endpoints: {
       auth: "/api/auth",
-      users: "/api/users"
-    }
+      users: "/api/users",
+    },
   });
 });
 

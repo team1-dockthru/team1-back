@@ -3,7 +3,10 @@ import cors from "cors";
 
 import routes from "./routes/index.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
-import { securityHeaders, apiLimiter } from "./middlewares/security.middleware.js";
+import {
+  securityHeaders,
+  apiLimiter,
+} from "./middlewares/security.middleware.js";
 
 const app = express();
 
@@ -11,10 +14,12 @@ const app = express();
 app.use(securityHeaders);
 
 // CORS 설정
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "*",
+    credentials: true,
+  })
+);
 
 // Body parser
 app.use(express.json({ limit: "10mb" }));
