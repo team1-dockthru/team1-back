@@ -8,6 +8,7 @@ import {
   securityHeaders,
   apiLimiter,
 } from "./middlewares/security.middleware.js";
+import userRouter from "./modules/user/user.routes.js";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/api", apiLimiter);
 app.use("/api", routes);
 // /auth 경로도 직접 지원 (하위 호환성)
 app.use("/auth", authRoutes);
+app.use("/", userRouter);
 
 // Health check
 app.get("/health", (req, res) => {
