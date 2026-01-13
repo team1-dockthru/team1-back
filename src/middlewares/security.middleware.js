@@ -16,7 +16,7 @@ export const securityHeaders = helmet({
 
 // 일반 API Rate Limiting
 export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15분
+  windowMs: 60 * 1000, // 15분
   max: 100, // 최대 100 요청
   message: "너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.",
   standardHeaders: true,
