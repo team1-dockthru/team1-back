@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-
+import healthRouter from "./modules/health/health.routes.js";
 import routes from "./routes/index.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
@@ -38,6 +38,9 @@ app.use("/auth", authRoutes);
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+app.use(express.json());
+app.use("/health", healthRouter);
 
 // 404 핸들러
 app.use((req, res) => {
