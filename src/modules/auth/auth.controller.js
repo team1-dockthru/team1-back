@@ -1,4 +1,4 @@
-import authService from "./auth.service.js";
+import  authService  from "./auth.service.js";
 
 export async function signup(req, res, next) {
   try {
@@ -22,6 +22,16 @@ export async function login(req, res, next) {
     const { email, password } = req.body;
     const result = await authService.login({ email, password });
     return res.status(200).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function googleLogin(req, res, next) {
+  try {
+    const { idToken } = req.body;
+    const result = await authService.googleLogin({ idToken });
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
