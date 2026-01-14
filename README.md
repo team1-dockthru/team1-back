@@ -8,8 +8,6 @@
 - **Express.js** - 웹 프레임워크
 - **Prisma** - ORM
 - **PostgreSQL** - 데이터베이스
-- **JWT** - 인증
-- **bcrypt** - 비밀번호 해싱
 
 ## 설치 및 실행
 

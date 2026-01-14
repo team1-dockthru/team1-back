@@ -1,3 +1,20 @@
+export function validateSignup(req, res, next) {
+  const { email, password, nickname } = req.body;
+
+  if (!email || !password || !nickname) {
+    return res
+      .status(400)
+      .json({ message: "이메일, 비밀번호, 닉네임은 필수입니다." });
+  }
+
+  if (password.length < 6) {
+    return res
+      .status(400)
+      .json({ message: "비밀번호는 최소 6자 이상이어야합니다." });
+  }
+  next();
+}
+
 export function validateLogin(req, res, next) {
   const { email, password } = req.body || {};
 
@@ -19,7 +36,9 @@ export function validateLogin(req, res, next) {
 
   // Password 최소 길이 검증
   if (password.length < 6) {
-    return res.status(400).json({ message: "비밀번호는 최소 6자 이상이어야 합니다." });
+    return res
+      .status(400)
+      .json({ message: "비밀번호는 최소 6자 이상이어야 합니다." });
   }
 
   next();
