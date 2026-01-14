@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 
 import routes from "./routes/index.js";
-import authRoutes from "./modules/auth/auth.routes.js";
 import userRouter from "./modules/user/user.routes.js";
 import healthRouter from "./modules/health/health.routes.js";
 
@@ -26,17 +25,12 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Health
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
 app.use("/health", healthRouter);
 
 // Rate limiting (API에만)
 app.use("/api", apiLimiter);
 
 // 라우트
-app.use("/auth", authRoutes);
-app.use("/", userRouter);
 app.use("/api", routes);
 
 // 404

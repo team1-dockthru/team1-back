@@ -33,8 +33,8 @@ export const authenticateToken = (req, res, next) => {
   }
 };
 
-export const optinalAuth = (req, res, next) => {
-  const authHeader = req.headers.authorzation;
+export const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
   if (!authHeader) return next();
 
@@ -42,7 +42,7 @@ export const optinalAuth = (req, res, next) => {
 
   if (scheme !== "Bearer" || !token) return next();
 
-  jwt.verify(token, ENV.JWT_SERCRET, (err, decoded) => {
+  jwt.verify(token, ENV.JWT_SECRET, (err, decoded) => {
     if (!err && decoded?.userId) {
       req.user = { userId: decoded.userId };
     }
