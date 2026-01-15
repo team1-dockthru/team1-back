@@ -8,43 +8,37 @@ datasource db {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  email        String    @unique
-  password     String?  
-  nickname     String
-  profileImage Int       @default(0)
-  grade        UserGrade?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                    Int          @id @default(autoincrement())
+  email                 String       @unique
+  password              String?  
+  nickname              String
+  profileImage         ProfileImage @default(USER)
+  role                  UserRole     @default(USER)
+  grade                 UserGrade    @default(NORMAL)
+  challengeParticipations Int       @default(0)
+  recommendedCount      Int          @default(0)
+  tokenVersion          Int          @default(0)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
   oauthAccounts OAuthAccount[]
 
   @@map("users")
 }
 
-model Admin {
-  id        Int       @id @default(autoincrement())
-  email     String   @unique
-  password  String?
-  nickname  String
-  role      AdminRole @default(ADMIN)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@map("admins")
-}
-
-enum AdminRole {
-  ADMIN
+enum ProfileImage {
+  ADMIN  // 0
+  USER   // 1
 }
 
 enum UserRole {
-  USER
+  ADMIN  // 0
+  USER   // 1
 }
 
 enum UserGrade {
-  NORMAL
-  EXPERT
+  EXPERT  // 0
+  NORMAL  // 1
 }
 
 model OAuthAccount {

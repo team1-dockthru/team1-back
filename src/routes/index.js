@@ -1,23 +1,18 @@
 import { Router } from "express";
-import userRoutes from "../modules/user/user.routes.js";
-import adminRoutes from "../modules/admin/admin.routes.js";
+import authRoutes from "../modules/auth/auth.routes.js";
 
 const router = Router();
 
-// API 루트
 router.get("/", (req, res) => {
   res.json({
     message: "API root",
     version: "1.0.0",
     endpoints: {
-      user: "/api/user",
-      admin: "/api/admin",
+      auth: "/auth",
     },
   });
 });
 
-// 라우트 등록
-router.use("/user", userRoutes);
-router.use("/admin", adminRoutes);
+router.use("/auth", authRoutes);
 
 export default router;
