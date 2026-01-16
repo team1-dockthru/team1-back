@@ -1,4 +1,3 @@
-// 회원가입 검증: 필수 필드, 이메일 형식, 비밀번호 길이, profileImage enum
 export function validateSignup(req, res, next) {
   const { email, password, nickname, profileImage } = req.body;
 
@@ -28,7 +27,6 @@ export function validateSignup(req, res, next) {
   next();
 }
 
-// 로그인 검증: 이메일 형식, 비밀번호 필수 및 길이
 export function validateLogin(req, res, next) {
   const { email, password } = req.body || {};
 

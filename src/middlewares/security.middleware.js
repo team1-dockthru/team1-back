@@ -1,7 +1,6 @@
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
-// 보안 헤더 설정 (CSP, XSS 방지 등)
 export const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
@@ -14,7 +13,6 @@ export const securityHeaders = helmet({
   crossOriginEmbedderPolicy: false,
 });
 
-// 일반 API Rate Limiting: 15분당 100회
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -23,7 +21,6 @@ export const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// 인증 API Rate Limiting: 15분당 5회
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,

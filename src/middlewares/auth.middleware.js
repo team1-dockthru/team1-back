@@ -31,7 +31,6 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(403).json({ message: "유효하지 않은 토큰입니다." });
     }
 
-    // 토큰 버전 검증 (이전 토큰 무효화 확인)
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: { tokenVersion: true },
@@ -41,7 +40,6 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
     }
 
-    // tokenVersion이 없는 이전 토큰은 무효화 (0으로 간주)
     const tokenVersion = payload.tokenVersion ?? 0;
     
     if (tokenVersion !== user.tokenVersion) {
