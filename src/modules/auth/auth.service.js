@@ -1,41 +1,217 @@
-import bcrypt from "bcrypt";
-import prisma from "../../config/database.js";
-import { generateToken } from "../../utils/jwt.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import { prisma } from "../../config/prisma.js";
 import { ENV } from "../../config/env.js";
+import { OAuth2Client } from "google-auth-library";
+import authRepository from "./auth.repository.js";
 
-async function login({ email, password }) {
-  const user = await prisma.user.findUnique({
-    where: { email },
+const googleClient = new OAuth2Client(ENV.GOOGLE_CLIENT_ID);
+
+export async function signup({ email, password, nickname, profileImage }) {
+  const existing = await authRepository.findUserByEmail(email);
+  if (existing) {
+    const err = new Error("이미 사용 중인 이메일입니다.");
+    err.status = 409;
+    throw err;
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await authRepository.createUser({
+    email,
+    password: hashedPassword,
+    nickname,
+    profileImage: profileImage ?? "USER",
+    grade: "NORMAL",
   });
 
-  if (!user) {
-    throw Object.assign(new Error("이메일 또는 비밀번호가 올바르지 않습니다."), {
-      status: 401,
-    });
-  }
-
-  const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) {
-    throw Object.assign(new Error("이메일 또는 비밀번호가 올바르지 않습니다."), {
-      status: 401,
-    });
-  }
-
-  const accessToken = generateToken(
+  const token = jwt.sign(
+    { userId: user.id, type: "user", role: user.role || "USER", tokenVersion: 0 },
+    ENV.JWT_SECRET,
     {
-      userId: user.id,
-    },
-    process.env.JWT_EXPIRES_IN || "1d"
+      expiresIn: "7d",
+    }
+  );
+
+  return { user, token };
+}
+
+export async function login({ email, password }) {
+  const user = await authRepository.findUserByEmail(email);
+
+  if (!user) {
+    const err = new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
+    err.status = 401;
+    throw err;
+  }
+
+  if (!user.password) {
+    const err = new Error(
+      "소셜 로그인으로 가입된 계정입니다. Google 로그인을 사용해주세요."
+    );
+    err.status = 400;
+    throw err;
+  }
+
+  const ok = await bcrypt.compare(password, user.password);
+  if (!ok) {
+    const err = new Error("이메일 또는 비밀번호가 올바르지 않습니다.");
+    err.status = 401;
+    throw err;
+  }
+
+  const updated = await authRepository.incrementTokenVersion(user.id);
+
+  const token = jwt.sign(
+    { userId: user.id, type: "user", role: user.role || "USER", tokenVersion: updated.tokenVersion },
+    ENV.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
   );
 
   return {
-    accessToken,
     user: {
-      userId: user.id,
+      id: user.id,
       email: user.email,
-      name: user.name,
+      nickname: user.nickname,
+      profileImage: user.profileImage,
+      role: user.role,
+      grade: user.grade,
     },
+    token,
   };
 }
 
-export default { login };
+export async function googleLogin({ idToken }) {
+  if (!idToken) {
+    const err = new Error("idToken이 필요합니다.");
+    err.status = 400;
+    throw err;
+  }
+
+  const ticket = await googleClient.verifyIdToken({
+    idToken,
+    audience: ENV.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  const provider = "google";
+  const providerId = payload?.sub;
+  const email = payload?.email;
+  const emailVerified = payload?.email_verified;
+  const name = payload?.name;
+
+  if (!providerId) {
+    const err = new Error("유효하지 않은 Google 토큰입니다.");
+    err.status = 401;
+    throw err;
+  }
+
+  if (!email || emailVerified !== true) {
+    const err = new Error("Google 이메일 인증이 필요합니다.");
+    err.status = 401;
+    throw err;
+  }
+
+  const existingAccount = await authRepository.findOAuthAccount(provider, providerId);
+
+  let user;
+
+  if (existingAccount?.user) {
+    user = existingAccount.user;
+  } else {
+    const existingUser = await authRepository.findUserByEmail(email);
+
+    if (existingUser) {
+      user = existingUser;
+
+      await authRepository.createOAuthAccount({
+        provider,
+        providerId,
+        email,
+        userId: user.id,
+      });
+    } else {
+      const nickname = name && name.trim() ? name.trim() : email.split("@")[0];
+
+      user = await authRepository.createUser({
+        email,
+        password: null,
+        nickname,
+        profileImage: "USER",
+        role: "USER",
+        grade: "NORMAL",
+        oauthAccounts: {
+          create: [{ provider, providerId, email }],
+        },
+      });
+    }
+  }
+
+  const updated = await authRepository.incrementTokenVersion(user.id);
+
+  const token = jwt.sign(
+    { userId: user.id, type: "user", role: user.role || "USER", tokenVersion: updated.tokenVersion },
+    ENV.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+      profileImage: user.profileImage,
+      role: user.role,
+      grade: user.grade,
+    },
+    token,
+  };
+}
+
+export async function findUserById(userId) {
+  return authRepository.findUserById(userId);
+}
+
+export async function getUserStatistics(userId) {
+  const user = await authRepository.findUserById(userId);
+  if (!user) {
+    return { challengeParticipations: 0, recommendedCount: 0 };
+  }
+  return {
+    challengeParticipations: user.challengeParticipations,
+    recommendedCount: user.recommendedCount,
+  };
+}
+
+export async function updateUserGrade(userId) {
+  const user = await authRepository.findUserById(userId);
+  if (!user) return null;
+
+  const { challengeParticipations, recommendedCount } = user;
+
+  let newGrade = "NORMAL";
+
+  if (
+    (challengeParticipations >= 5 && recommendedCount >= 5) ||
+    challengeParticipations >= 10 ||
+    recommendedCount >= 10
+  ) {
+    newGrade = "EXPERT";
+  }
+
+  const updatedUser = await authRepository.updateUserGrade(userId, newGrade);
+  return updatedUser;
+}
+
+export default {
+  signup,
+  login,
+  googleLogin,
+  findUserById,
+  getUserStatistics,
+  updateUserGrade,
+};

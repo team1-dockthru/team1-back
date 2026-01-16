@@ -5,7 +5,6 @@ import workRoutes from "../modules/work/work.routes.js";
 
 const router = Router();
 
-// API 루트
 router.get("/", (req, res) => {
   res.json({
     message: "API root",
@@ -18,7 +17,6 @@ router.get("/", (req, res) => {
   });
 });
 
-// 라우트 등록
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/works", workRoutes);
