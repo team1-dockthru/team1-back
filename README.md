@@ -250,3 +250,66 @@ src/
   "message": "에러 메시지"
 }
 ```
+## Render 배포 가이드
+
+### 1. Render.com 설정
+
+1. [Render.com](https://render.com)에 로그인
+2. **New +** → **Web Service** 선택
+3. GitHub 저장소 연결: `team1-dockthru/team1-back`
+4. `render.yaml` 파일이 자동으로 인식됩니다
+
+### 2. 환경 변수 설정
+
+Render 대시보드의 **Environment** 섹션에서 다음 환경 변수를 설정해야 합니다:
+
+#### 필수 환경 변수
+
+- `JWT_SECRET` - JWT 토큰 서명에 사용할 시크릿 키 (예: `your-super-secret-jwt-key-here`)
+- `DATABASE_URL` - PostgreSQL 데이터베이스 연결 URL
+  - Render에서 PostgreSQL 데이터베이스를 생성하면 자동으로 제공됩니다
+  - 또는 외부 PostgreSQL 서비스(Neon, Supabase 등)의 연결 URL 사용
+
+#### 선택적 환경 변수
+
+- `GOOGLE_CLIENT_ID` - Google OAuth 클라이언트 ID (Google 로그인 사용 시)
+- `API_URL` - 배포된 API URL (Swagger 문서용, 예: `https://your-app.onrender.com`)
+- `CORS_ORIGIN` - CORS 허용 오리진 (기본값: `*`)
+
+### 3. PostgreSQL 데이터베이스 생성
+
+1. Render 대시보드에서 **New +** → **PostgreSQL** 선택
+2. 데이터베이스 이름 설정
+3. 생성된 데이터베이스의 **Internal Database URL** 또는 **External Database URL**을 복사
+4. Web Service의 `DATABASE_URL` 환경 변수에 설정
+
+### 4. 배포 확인
+
+배포가 완료되면:
+
+- API 서버: `https://your-app.onrender.com`
+- Swagger 문서: `https://your-app.onrender.com/api-docs`
+- 헬스 체크: `https://your-app.onrender.com/health/db`
+
+### 5. 문제 해결
+
+#### 환경 변수 에러
+
+```
+Error: JWT_SECRET 환경 변수가 설정되지 않았습니다.
+```
+
+**해결 방법**: Render 대시보드의 **Environment** 섹션에서 `JWT_SECRET` 환경 변수를 추가하세요.
+
+#### 데이터베이스 연결 에러
+
+**해결 방법**: 
+1. PostgreSQL 데이터베이스가 생성되었는지 확인
+2. `DATABASE_URL` 환경 변수가 올바르게 설정되었는지 확인
+3. 마이그레이션이 실행되었는지 확인 (`npx prisma migrate deploy`는 빌드 시 자동 실행됨)
+
+#### 빌드 에러
+
+**해결 방법**:
+- `render.yaml`의 `buildCommand`가 올바른지 확인
+- `package-lock.json` 파일이 커밋되었는지 확인
