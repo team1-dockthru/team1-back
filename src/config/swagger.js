@@ -15,7 +15,7 @@ const options = {
     servers: [
       {
         url: process.env.API_URL || "http://localhost:4000",
-        description: "API 서버",
+        description: process.env.API_URL ? "프로덕션 서버" : "로컬 개발 서버",
       },
     ],
     components: {
@@ -207,44 +207,51 @@ const options = {
 
 const swaggerSpec = swaggerJsdoc(options);
 
+const getServerUrl = (req) => {
+  const protocol = req.get("x-forwarded-proto") || req.protocol || "https";
+  const host = req.get("host");
+  const baseUrl = `${protocol}://${host}`;
+  return process.env.API_URL || baseUrl;
+};
+
+const createDynamicSpec = (req) => {
+  const serverUrl = getServerUrl(req);
+  const serverDescription = process.env.API_URL 
+    ? "프로덕션 서버 (Render)" 
+    : `로컬 개발 서버 (${serverUrl})`;
+  
+  return {
+    ...swaggerSpec,
+    servers: [
+      {
+        url: serverUrl,
+        description: serverDescription,
+      },
+    ],
+  };
+};
+
 export const swaggerSetup = (app) => {
-  // Swagger JSON 스펙 엔드포인트 (동적 서버 URL 포함)
   app.get("/api-docs.json", (req, res) => {
-    // 요청 호스트를 기반으로 서버 URL 동적 설정
-    const protocol = req.protocol;
-    const host = req.get("host");
-    const baseUrl = `${protocol}://${host}`;
-    
-    // 서버 URL이 환경 변수로 설정되어 있지 않으면 요청 호스트 사용
-    const serverUrl = process.env.API_URL || baseUrl;
-    
-    // 동적으로 서버 URL 업데이트
-    const dynamicSpec = {
-      ...swaggerSpec,
-      servers: [
-        {
-          url: serverUrl,
-          description: "API 서버",
-        },
-      ],
-    };
-    
+    const dynamicSpec = createDynamicSpec(req);
     res.setHeader("Content-Type", "application/json");
     res.send(dynamicSpec);
   });
 
-  // Swagger UI 설정 (동적 스펙 사용)
   const swaggerUiOptions = {
     customCss: ".swagger-ui .topbar { display: none }",
     customSiteTitle: "Team1 API Documentation",
     swaggerOptions: {
       persistAuthorization: true,
-      url: "/api-docs.json", // 동적 스펙 엔드포인트 사용
+      url: "/api-docs.json",
     },
   };
 
   app.use("/api-docs", swaggerUi.serve);
-  app.get("/api-docs", swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+  app.get("/api-docs", (req, res, next) => {
+    const dynamicSpec = createDynamicSpec(req);
+    swaggerUi.setup(dynamicSpec, swaggerUiOptions)(req, res, next);
+  });
 };
 
 export default swaggerSpec;

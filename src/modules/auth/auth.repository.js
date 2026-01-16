@@ -1,7 +1,5 @@
 import { prisma } from "../../config/prisma.js";
 
-// Repository 레이어: 데이터베이스 쿼리 로직 분리
-
 export async function findUserByEmail(email) {
   return prisma.user.findUnique({
     where: { email },
@@ -77,7 +75,6 @@ export async function createOAuthAccount(data) {
   });
 }
 
-// 토큰 버전 증가 (로그인 시 이전 토큰 무효화)
 export async function incrementTokenVersion(userId) {
   return prisma.user.update({
     where: { id: userId },
@@ -93,7 +90,6 @@ export async function incrementTokenVersion(userId) {
   });
 }
 
-// 유저의 tokenVersion 조회
 export async function getUserTokenVersion(userId) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
