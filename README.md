@@ -273,7 +273,7 @@ Render 대시보드의 **Environment** 섹션에서 다음 환경 변수를 설�
 #### 선택적 환경 변수
 
 - `GOOGLE_CLIENT_ID` - Google OAuth 클라이언트 ID (Google 로그인 사용 시)
-- `API_URL` - 배포된 API URL (Swagger 문서용, 예: `https://your-app.onrender.com`)
+- `API_URL` - 배포된 API URL (Swagger 문서용, 예: `https://team1-back-1.onrender.com`)
 - `CORS_ORIGIN` - CORS 허용 오리진 (기본값: `*`)
 
 ### 3. PostgreSQL 데이터베이스 생성
@@ -287,9 +287,9 @@ Render 대시보드의 **Environment** 섹션에서 다음 환경 변수를 설�
 
 배포가 완료되면:
 
-- API 서버: `https://your-app.onrender.com`
-- Swagger 문서: `https://your-app.onrender.com/api-docs`
-- 헬스 체크: `https://your-app.onrender.com/health/db`
+- API 서버: `https://team1-back-1.onrender.com`
+- Swagger 문서: `https://team1-back-1.onrender.com/api-docs`
+- 헬스 체크: `https://team1-back-1.onrender.com/health/db`
 
 ### 5. 문제 해결
 

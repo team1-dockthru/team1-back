@@ -39,7 +39,6 @@ export async function googleLogin(req, res, next) {
 
 export async function logout(req, res, next) {
   try {
-    // JWT는 stateless이므로 클라이언트에서 토큰 삭제
     return res.status(200).json({ data: { message: "로그아웃되었습니다." } });
   } catch (err) {
     next(err);

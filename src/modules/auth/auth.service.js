@@ -7,7 +7,6 @@ import authRepository from "./auth.repository.js";
 
 const googleClient = new OAuth2Client(ENV.GOOGLE_CLIENT_ID);
 
-// 회원가입: 이메일 중복 체크 → 비밀번호 해싱 → 유저 생성 → JWT 토큰 발급
 export async function signup({ email, password, nickname, profileImage }) {
   const existing = await authRepository.findUserByEmail(email);
   if (existing) {
@@ -26,7 +25,6 @@ export async function signup({ email, password, nickname, profileImage }) {
     grade: "NORMAL",
   });
 
-  // 회원가입 시 tokenVersion은 기본값 0
   const token = jwt.sign(
     { userId: user.id, type: "user", role: user.role || "USER", tokenVersion: 0 },
     ENV.JWT_SECRET,
@@ -38,7 +36,6 @@ export async function signup({ email, password, nickname, profileImage }) {
   return { user, token };
 }
 
-// 로그인: 이메일 조회 → 비밀번호 검증 → JWT 토큰 발급
 export async function login({ email, password }) {
   const user = await authRepository.findUserByEmail(email);
 
@@ -63,7 +60,6 @@ export async function login({ email, password }) {
     throw err;
   }
 
-  // 토큰 버전 증가 (이전 토큰 무효화)
   const updated = await authRepository.incrementTokenVersion(user.id);
 
   const token = jwt.sign(
@@ -87,7 +83,6 @@ export async function login({ email, password }) {
   };
 }
 
-// Google 소셜 로그인: idToken 검증 → OAuth 계정 조회/생성 → 유저 조회/생성 → JWT 토큰 발급
 export async function googleLogin({ idToken }) {
   if (!idToken) {
     const err = new Error("idToken이 필요합니다.");
@@ -154,7 +149,6 @@ export async function googleLogin({ idToken }) {
     }
   }
 
-  // 토큰 버전 증가 (이전 토큰 무효화)
   const updated = await authRepository.incrementTokenVersion(user.id);
 
   const token = jwt.sign(
@@ -182,7 +176,6 @@ export async function findUserById(userId) {
   return authRepository.findUserById(userId);
 }
 
-// 유저 통계 조회: User 모델에 저장된 통계 필드 반환
 export async function getUserStatistics(userId) {
   const user = await authRepository.findUserById(userId);
   if (!user) {
@@ -194,8 +187,6 @@ export async function getUserStatistics(userId) {
   };
 }
 
-// 유저 등급 업데이트: 통계 필드 기반으로 등급 계산
-// 조건: (참여 5회 + 추천 5회) 또는 참여 10회 또는 추천 10회 → EXPERT, 그 외 → NORMAL
 export async function updateUserGrade(userId) {
   const user = await authRepository.findUserById(userId);
   if (!user) return null;
