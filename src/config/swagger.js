@@ -208,17 +208,38 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 export const swaggerSetup = (app) => {
+  // Swagger JSON 스펙 엔드포인트 (동적 서버 URL 포함)
   app.get("/api-docs.json", (req, res) => {
+    // 요청 호스트를 기반으로 서버 URL 동적 설정
+    const protocol = req.protocol;
+    const host = req.get("host");
+    const baseUrl = `${protocol}://${host}`;
+    
+    // 서버 URL이 환경 변수로 설정되어 있지 않으면 요청 호스트 사용
+    const serverUrl = process.env.API_URL || baseUrl;
+    
+    // 동적으로 서버 URL 업데이트
+    const dynamicSpec = {
+      ...swaggerSpec,
+      servers: [
+        {
+          url: serverUrl,
+          description: "API 서버",
+        },
+      ],
+    };
+    
     res.setHeader("Content-Type", "application/json");
-    res.send(swaggerSpec);
+    res.send(dynamicSpec);
   });
 
+  // Swagger UI 설정 (동적 스펙 사용)
   const swaggerUiOptions = {
     customCss: ".swagger-ui .topbar { display: none }",
     customSiteTitle: "Team1 API Documentation",
     swaggerOptions: {
       persistAuthorization: true,
-      url: "/api-docs.json",
+      url: "/api-docs.json", // 동적 스펙 엔드포인트 사용
     },
   };
 
