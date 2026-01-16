@@ -208,10 +208,22 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 export const swaggerSetup = (app) => {
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  app.get("/api-docs.json", (req, res) => {
+    res.setHeader("Content-Type", "application/json");
+    res.send(swaggerSpec);
+  });
+
+  const swaggerUiOptions = {
     customCss: ".swagger-ui .topbar { display: none }",
     customSiteTitle: "Team1 API Documentation",
-  }));
+    swaggerOptions: {
+      persistAuthorization: true,
+      url: "/api-docs.json",
+    },
+  };
+
+  app.use("/api-docs", swaggerUi.serve);
+  app.get("/api-docs", swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 };
 
 export default swaggerSpec;
