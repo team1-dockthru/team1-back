@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    Int          @id @default(autoincrement())
+  email                 String       @unique
+  password              String?  
+  nickname              String
+  profileImage         ProfileImage @default(USER)
+  role                  UserRole     @default(USER)
+  grade                 UserGrade    @default(NORMAL)
+  challengeParticipations Int       @default(0)
+  recommendedCount      Int          @default(0)
+  tokenVersion          Int          @default(0)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  oauthAccounts OAuthAccount[]
+
+  @@map("users")
+}
+
+enum ProfileImage {
+  ADMIN  // 0
+  USER   // 1
+}
+
+enum UserRole {
+  ADMIN  // 0
+  USER   // 1
+}
+
+enum UserGrade {
+  EXPERT  // 0
+  NORMAL  // 1
+}
+
+model OAuthAccount {
+  id           Int      @id @default(autoincrement())
+  provider     String   // "google"
+  providerId   String   // Google sub
+  email        String?  // 구글 이메일
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([provider, providerId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
