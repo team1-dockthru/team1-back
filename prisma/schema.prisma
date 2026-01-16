@@ -15,5 +15,98 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  works         Work[]
+  feedbacks     Feedback[]
+  likes         Like[]
+  notifications Notification[]
+
   @@map("users")
+}
+
+enum WorkStatus {
+  draft
+  done
+}
+
+enum NotificationType {
+  CHALLENGE_REQUEST_APPROVED
+  CHALLENGE_REQUEST_REJECTED
+  CHALLENGE_DELETED
+  CHALLENGE_CLOSED
+
+  WORK_CREATED
+  WORK_UPDATED
+  WORK_DELETED
+
+  FEEDBACK_CREATED
+  FEEDBACK_UPDATED
+  FEEDBACK_DELETED
+}
+
+model Work {
+  id          Int        @id @default(autoincrement()) @map("work_id")
+  challengeId Int        @map("challenge_id")
+  userId      String     @map("user_id")
+  title       String     @db.Text
+  content     String     @db.Text
+  originalUrl String?    @map("original_url")
+  workStatus  WorkStatus @map("work_status")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  submittedAt DateTime?  @map("submitted_at")
+
+  user          User           @relation(fields: [userId], references: [id])
+  feedbacks     Feedback[]
+  likes         Like[]
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([challengeId])
+  @@map("work")
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement()) @map("feedback_pk")
+  userId    String   @map("user_pk")
+  workId    Int      @map("work_pk")
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+  work Work @relation(fields: [workId], references: [id])
+
+  @@index([userId])
+  @@index([workId])
+  @@map("feedback")
+}
+
+model Like {
+  userId    String   @map("user_pk")
+  workId    Int      @map("work_pk")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+  work Work @relation(fields: [workId], references: [id])
+
+  @@id([userId, workId])
+  @@map("like")
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement()) @map("notification_pk")
+  userId      String           @map("user_pk")
+  challengeId Int?             @map("challenge_pk")
+  workId      Int?             @map("work_pk")
+  type        NotificationType @map("type")
+  message     String           @db.Text
+  createdAt   DateTime         @default(now()) @map("created_at")
+  readAt      DateTime?        @map("read_at")
+
+  user User  @relation(fields: [userId], references: [id])
+  work Work? @relation(fields: [workId], references: [id])
+
+  @@index([userId])
+  @@index([workId])
+  @@map("notification")
 }
