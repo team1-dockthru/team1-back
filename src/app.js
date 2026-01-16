@@ -9,6 +9,7 @@ import {
   securityHeaders,
   apiLimiter,
 } from "./middlewares/security.middleware.js";
+import { swaggerSetup } from "./config/swagger.js";
 
 const app = express();
 
@@ -21,6 +22,9 @@ app.use(
 );
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Swagger 설정
+swaggerSetup(app);
 
 app.use("/health", healthRouter);
 app.use("/auth", apiLimiter);
