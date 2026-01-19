@@ -35,28 +35,28 @@ model User {
 }
 
 enum ProfileImage {
-  ADMIN
-  USER
+  ADMIN // 0
+  USER  // 1
 }
 
 enum UserRole {
-  ADMIN
-  USER
+  ADMIN // 0
+  USER  // 1
 }
 
 enum UserGrade {
-  EXPERT
-  NORMAL
+  EXPERT // 0
+  NORMAL // 1
 }
 
 model OAuthAccount {
-  id         Int      @id @default(autoincrement())
-  provider   String // "google"
-  providerId String // Google sub
-  email      String? // 구글 이메일
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  provider     String   // "google"
+  providerId   String   // Google sub
+  email        String?  // 구글 이메일
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
 
   @@unique([provider, providerId])
   @@index([userId])
@@ -94,15 +94,15 @@ enum ChallengeStatus {
 }
 
 enum ParticipantStatus {
-  PENDING      // 승인 대기
-  REJECTED     // 신청 거절
-  APPROVED     // 신청승인
+  PENDING          // 승인 대기
+  REJECTED         // 신청 거절
+  APPROVED         // 신청승인
   CHALLENGE_DELETED // 챌린지 삭제
 }
 
 enum RequestStatus {
-  PENDING  // 신청중
-  REJECTED // 거절
+  PENDING   // 신청중
+  REJECTED  // 거절
   CANCELLED // 취소
 }
 
@@ -178,22 +178,22 @@ model Notification {
 }
 
 model ChallengeRequest {
-  id            Int           @id @default(autoincrement()) @map("challenge_request_pk")
-  userId        Int           @map("user_pk")
-  title         String        @db.Text
-  sourceUrl     String        @map("source_url")
-  field         String        @db.Text
-  docType       DocType       @map("doc_type")
-  deadlineAt    DateTime      @map("deadline_at")
-  maxParticipants Int         @map("max_participants")
-  content       String        @db.Text
-  requestStatus RequestStatus @default(PENDING) @map("request_status")
-  adminReason   String?       @db.Text @map("admin_reason")
-  processedAt   DateTime?     @map("processed_at")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  id              Int           @id @default(autoincrement()) @map("challenge_request_pk")
+  userId          Int           @map("user_pk")
+  title           String        @db.Text
+  sourceUrl       String        @map("source_url")
+  field           String        @db.Text
+  docType         DocType       @map("doc_type")
+  deadlineAt      DateTime      @map("deadline_at")
+  maxParticipants Int           @map("max_participants")
+  content         String        @db.Text
+  requestStatus   RequestStatus @default(PENDING) @map("request_status")
+  adminReason     String?       @db.Text @map("admin_reason")
+  processedAt     DateTime?     @map("processed_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
 
-  user      User        @relation(fields: [userId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
   challenges Challenge[]
 
   @@index([userId])
@@ -201,25 +201,25 @@ model ChallengeRequest {
 }
 
 model Challenge {
-  id                Int              @id @default(autoincrement()) @map("challenge_pk")
-  userId            Int              @map("user_pk")
+  id                 Int             @id @default(autoincrement()) @map("challenge_pk")
+  userId             Int             @map("user_pk")
   challengeRequestId Int?            @map("challenge_request_pk")
-  title             String           @db.Text
-  sourceUrl         String           @map("source_url")
-  field             String           @db.Text
-  docType           DocType           @map("doc_type")
-  deadlineAt        DateTime         @map("deadline_at")
-  maxParticipants   Int              @map("max_participants")
-  content           String           @db.Text
-  challengeStatus   ChallengeStatus  @default(IN_PROGRESS) @map("challenge_status")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
+  title              String          @db.Text
+  sourceUrl          String          @map("source_url")
+  field              String          @db.Text
+  docType            DocType         @map("doc_type")
+  deadlineAt         DateTime        @map("deadline_at")
+  maxParticipants    Int             @map("max_participants")
+  content            String          @db.Text
+  challengeStatus    ChallengeStatus @default(IN_PROGRESS) @map("challenge_status")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
 
-  user                User                 @relation(fields: [userId], references: [id])
-  challengeRequest    ChallengeRequest?     @relation(fields: [challengeRequestId], references: [id])
-  works               Work[]
-  participants        ChallengeParticipant[]
-  notifications       Notification[]
+  user             User              @relation(fields: [userId], references: [id])
+  challengeRequest ChallengeRequest? @relation(fields: [challengeRequestId], references: [id])
+  works            Work[]
+  participants     ChallengeParticipant[]
+  notifications    Notification[]
 
   @@index([userId])
   @@index([challengeRequestId])
