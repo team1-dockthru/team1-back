@@ -4,8 +4,20 @@ import {
   listChallenges,
   updateChallenge,
   deleteChallenge,
+  createParticipant,
+  listParticipants,
+  updateParticipantStatus,
+  deleteParticipant,
+  createChallengeRequest,
+  listChallengeRequests,
+  getChallengeRequestById,
+  updateChallengeRequest,
+  deleteChallengeRequest,
+  processChallengeRequest,
   ChallengeStatus,
   DocType,
+  ParticipantStatus,
+  RequestStatus,
 } from "./challenges.service.js";
 
 const parseIntStrict = (value) => {
@@ -176,6 +188,290 @@ export async function remove(req, res, next) {
 
     await deleteChallenge({ id, userId: req.user.userId });
     return res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createParticipantRequest(req, res, next) {
+  try {
+    const challengeId = parseIntStrict(req.params.id);
+    if (!challengeId) {
+      return res.status(400).json({ message: "유효한 challenge id가 필요합니다." });
+    }
+
+    const participant = await createParticipant({
+      challengeId,
+      userId: req.user.userId,
+    });
+
+    return res.status(201).json({ data: participant });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getParticipants(req, res, next) {
+  try {
+    const challengeId = parseIntStrict(req.params.id);
+    if (!challengeId) {
+      return res.status(400).json({ message: "유효한 challenge id가 필요합니다." });
+    }
+
+    const participants = await listParticipants({
+      challengeId,
+      userId: req.user.userId,
+      role: req.user.role,
+    });
+
+    return res.status(200).json({ data: participants });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateParticipant(req, res, next) {
+  try {
+    const challengeId = parseIntStrict(req.params.id);
+    const participantId = parseIntStrict(req.params.participantId);
+
+    if (!challengeId) {
+      return res.status(400).json({ message: "유효한 challenge id가 필요합니다." });
+    }
+    if (!participantId) {
+      return res.status(400).json({ message: "유효한 participant id가 필요합니다." });
+    }
+
+    const { status } = req.body || {};
+
+    if (!status || !Object.values(ParticipantStatus).includes(status)) {
+      return res.status(400).json({
+        message: "status는 필수이며 PENDING, REJECTED, APPROVED, CHALLENGE_DELETED 중 하나여야 합니다.",
+      });
+    }
+
+    const participant = await updateParticipantStatus({
+      challengeId,
+      participantId,
+      userId: req.user.userId,
+      role: req.user.role,
+      status,
+    });
+
+    return res.status(200).json({ data: participant });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function removeParticipant(req, res, next) {
+  try {
+    const challengeId = parseIntStrict(req.params.id);
+    const participantId = parseIntStrict(req.params.participantId);
+
+    if (!challengeId) {
+      return res.status(400).json({ message: "유효한 challenge id가 필요합니다." });
+    }
+    if (!participantId) {
+      return res.status(400).json({ message: "유효한 participant id가 필요합니다." });
+    }
+
+    await deleteParticipant({
+      challengeId,
+      participantId,
+      userId: req.user.userId,
+    });
+
+    return res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function createRequest(req, res, next) {
+  try {
+    const {
+      title,
+      sourceUrl,
+      field,
+      docType,
+      deadlineAt,
+      maxParticipants,
+      content,
+    } = req.body || {};
+
+    if (!title || typeof title !== "string") {
+      return res.status(400).json({ message: "title은 필수입니다." });
+    }
+    if (!sourceUrl || typeof sourceUrl !== "string") {
+      return res.status(400).json({ message: "sourceUrl은 필수입니다." });
+    }
+    if (!field || typeof field !== "string") {
+      return res.status(400).json({ message: "field는 필수입니다." });
+    }
+    if (!docType || !Object.values(DocType).includes(docType)) {
+      return res.status(400).json({ message: "docType은 필수이며 OFFICIAL_DOCUMENT 또는 BLOG여야 합니다." });
+    }
+    if (!deadlineAt) {
+      return res.status(400).json({ message: "deadlineAt은 필수입니다." });
+    }
+    if (!maxParticipants || typeof maxParticipants !== "number" || maxParticipants < 1) {
+      return res.status(400).json({ message: "maxParticipants는 1 이상의 숫자여야 합니다." });
+    }
+    if (!content || typeof content !== "string") {
+      return res.status(400).json({ message: "content는 필수입니다." });
+    }
+
+    const challengeRequest = await createChallengeRequest({
+      userId: req.user.userId,
+      title,
+      sourceUrl,
+      field,
+      docType,
+      deadlineAt,
+      maxParticipants,
+      content,
+    });
+
+    return res.status(201).json({ data: challengeRequest });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listRequests(req, res, next) {
+  try {
+    const { userId, requestStatus } = req.query || {};
+
+    const parsedUserId = parseIntStrict(userId);
+
+    if (requestStatus && !Object.values(RequestStatus).includes(requestStatus)) {
+      return res.status(400).json({ message: "requestStatus 값이 올바르지 않습니다." });
+    }
+
+    const challengeRequests = await listChallengeRequests({
+      userId: parsedUserId ?? undefined,
+      requestStatus: requestStatus || undefined,
+    });
+
+    return res.status(200).json({ data: challengeRequests });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getRequestById(req, res, next) {
+  try {
+    const id = parseIntStrict(req.params.id);
+    if (!id) {
+      return res.status(400).json({ message: "유효한 challenge request id가 필요합니다." });
+    }
+
+    const challengeRequest = await getChallengeRequestById(id);
+    if (!challengeRequest) {
+      return res.status(404).json({ message: "챌린지 생성 신청을 찾을 수 없습니다." });
+    }
+
+    return res.status(200).json({ data: challengeRequest });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateRequest(req, res, next) {
+  try {
+    const id = parseIntStrict(req.params.id);
+    if (!id) {
+      return res.status(400).json({ message: "유효한 challenge request id가 필요합니다." });
+    }
+
+    const {
+      title,
+      sourceUrl,
+      field,
+      docType,
+      deadlineAt,
+      maxParticipants,
+      content,
+    } = req.body || {};
+
+    if (docType && !Object.values(DocType).includes(docType)) {
+      return res.status(400).json({ message: "docType 값이 올바르지 않습니다." });
+    }
+    if (maxParticipants !== undefined && (typeof maxParticipants !== "number" || maxParticipants < 1)) {
+      return res.status(400).json({ message: "maxParticipants는 1 이상의 숫자여야 합니다." });
+    }
+
+    const data = {};
+    if (title !== undefined) data.title = title;
+    if (sourceUrl !== undefined) data.sourceUrl = sourceUrl;
+    if (field !== undefined) data.field = field;
+    if (docType !== undefined) data.docType = docType;
+    if (deadlineAt !== undefined) data.deadlineAt = deadlineAt;
+    if (maxParticipants !== undefined) data.maxParticipants = maxParticipants;
+    if (content !== undefined) data.content = content;
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ message: "수정할 값이 없습니다." });
+    }
+
+    const challengeRequest = await updateChallengeRequest({
+      id,
+      userId: req.user.userId,
+      data,
+    });
+
+    return res.status(200).json({ data: challengeRequest });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function removeRequest(req, res, next) {
+  try {
+    const id = parseIntStrict(req.params.id);
+    if (!id) {
+      return res.status(400).json({ message: "유효한 challenge request id가 필요합니다." });
+    }
+
+    await deleteChallengeRequest({ id, userId: req.user.userId });
+    return res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function processRequest(req, res, next) {
+  try {
+    const id = parseIntStrict(req.params.id);
+    if (!id) {
+      return res.status(400).json({ message: "유효한 challenge request id가 필요합니다." });
+    }
+
+    const { status, adminReason } = req.body || {};
+
+    if (!status || !Object.values(RequestStatus).includes(status)) {
+      return res.status(400).json({
+        message: "status는 필수이며 PENDING, REJECTED, CANCELLED 중 하나여야 합니다.",
+      });
+    }
+
+    // PENDING이나 CANCELLED는 처리할 수 없음 (승인/거절만 가능)
+    if (status === RequestStatus.PENDING || status === RequestStatus.CANCELLED) {
+      return res.status(400).json({
+        message: "승인 또는 거절만 처리할 수 있습니다.",
+      });
+    }
+
+    const challengeRequest = await processChallengeRequest({
+      id,
+      userId: req.user.userId,
+      role: req.user.role,
+      status,
+      adminReason,
+    });
+
+    return res.status(200).json({ data: challengeRequest });
   } catch (err) {
     next(err);
   }
