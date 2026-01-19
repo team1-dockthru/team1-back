@@ -1,6 +1,7 @@
 import app from "./app.js";
 import { ENV } from "./config/env.js";
 
+app.set("trust proxy", 1);
 const PORT = Number(process.env.PORT) || 4000;
 
 app.listen(PORT, () => {

@@ -14,8 +14,8 @@ const options = {
     },
     servers: [
       {
-        url: process.env.API_URL || "http://localhost:4000",
-        description: process.env.API_URL ? "프로덕션 서버" : "로컬 개발 서버",
+        url: "http://localhost:4000/api",
+        description: "로컬 개발 서버",
       },
     ],
     components: {
@@ -208,10 +208,13 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 const getServerUrl = (req) => {
-  const protocol = req.get("x-forwarded-proto") || req.protocol || "https";
+  const xfProto = req.get("x-forwarded-proto");
+  const protocol = xfProto ? xfProto.split(",")[0] : "https";
   const host = req.get("host");
-  const baseUrl = `${protocol}://${host}`;
-  return process.env.API_URL || baseUrl;
+
+  const baseUrl = process.env.API_URL || `${protocol}://${host}`;
+
+  return `${baseUrl}`;
 };
 
 const createDynamicSpec = (req) => {
