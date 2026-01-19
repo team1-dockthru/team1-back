@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// 필수 환경 변수 검증
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET 환경 변수가 설정되지 않았습니다.");
 }
@@ -16,4 +15,5 @@ export const ENV = {
   JWT_SECRET: process.env.JWT_SECRET,
   NODE_ENV: process.env.NODE_ENV || "development",
   DATABASE_URL: process.env.DATABASE_URL,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 };
