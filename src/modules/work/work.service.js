@@ -4,11 +4,12 @@ const WORK_STATUS = {
   draft: "draft",
   done: "done",
 };
+const DEFAULT_PAGE_SIZE = 5;
 
 export async function createWork({ userId, challengeId, title, content, originalUrl }) {
   return prisma.work.create({
     data: {
-      userId,
+      userId, 
       challengeId,
       title,
       content,
@@ -24,17 +25,25 @@ export async function getWorkById(id) {
   });
 }
 
-export async function listWorks({ challengeId, userId, workStatus }) {
+export async function listWorks({ challengeId, userId, workStatus, page = 1, limit = DEFAULT_PAGE_SIZE }) {
   const where = {};
 
   if (typeof challengeId === "number") where.challengeId = challengeId;
   if (typeof userId === "string") where.userId = userId;
   if (workStatus) where.workStatus = workStatus;
 
-  return prisma.work.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-  });
+  const skip = (page - 1) * limit;
+  const [items, total] = await Promise.all([
+    prisma.work.findMany({
+      where,
+      orderBy: [{ likes: { _count: "desc" } }, { createdAt: "desc" }],
+      skip,
+      take: limit,
+    }),
+    prisma.work.count({ where }),
+  ]);
+
+  return { items, total, page, limit };
 }
 
 export async function updateWork({ id, userId, data }) {

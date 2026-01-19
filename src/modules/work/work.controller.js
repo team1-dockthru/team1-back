@@ -44,20 +44,35 @@ export async function create(req, res, next) {
 
 export async function list(req, res, next) {
   try {
-    const { challengeId, userId, workStatus } = req.query || {};
+    const { challengeId, userId, workStatus, page } = req.query || {};
     const parsedChallengeId = parseIntStrict(challengeId);
+    const parsedPage = parseIntStrict(page) ?? 1;
 
     if (workStatus && !Object.values(WorkStatus).includes(workStatus)) {
       return res.status(400).json({ message: "workStatus 값이 올바르지 않습니다." });
     }
+    if (parsedPage < 1) {
+      return res.status(400).json({ message: "page는 1 이상의 정수여야 합니다." });
+    }
 
-    const works = await listWorks({
+    const result = await listWorks({
       challengeId: parsedChallengeId ?? undefined,
       userId: userId || undefined,
       workStatus: workStatus || undefined,
+      page: parsedPage,
     });
 
-    return res.status(200).json({ data: works });
+    const totalPages = result.total === 0 ? 0 : Math.ceil(result.total / result.limit);
+
+    return res.status(200).json({
+      data: result.items,
+      page: result.page,
+      limit: result.limit,
+      total: result.total,
+      totalPages,
+      hasNext: result.page < totalPages,
+      hasPrev: result.page > 1,
+    });
   } catch (err) {
     next(err);
   }

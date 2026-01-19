@@ -7,25 +7,57 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {  id                    Int          @id @default(autoincrement())
-  email                 String       @unique
-  password              String?  
-  nickname              String
-  profileImage         ProfileImage @default(USER)
-  role                  UserRole     @default(USER)
-  grade                 UserGrade    @default(NORMAL)
-  challengeParticipations Int       @default(0)
-  recommendedCount      Int          @default(0)
-  tokenVersion          Int          @default(0)
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+model User {
+  id                      Int          @id @default(autoincrement())
+  email                   String       @unique
+  password                String?
+  nickname                String
+  profileImage            ProfileImage @default(USER)
+  role                    UserRole     @default(USER)
+  grade                   UserGrade    @default(NORMAL)
+  challengeParticipations Int          @default(0)
+  recommendedCount        Int          @default(0)
+  tokenVersion            Int          @default(0)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
 
   oauthAccounts OAuthAccount[]
+
   works         Work[]
   feedbacks     Feedback[]
   likes         Like[]
   notifications Notification[]
+
   @@map("users")
+}
+
+enum ProfileImage {
+  ADMIN
+  USER
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum UserGrade {
+  EXPERT
+  NORMAL
+}
+
+model OAuthAccount {
+  id         Int      @id @default(autoincrement())
+  provider   String // "google"
+  providerId String // Google sub
+  email      String? // 구글 이메일
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([provider, providerId])
+  @@index([userId])
+  @@map("oauth_accounts")
 }
 
 enum WorkStatus {
@@ -51,7 +83,7 @@ enum NotificationType {
 model Work {
   id          Int        @id @default(autoincrement()) @map("work_id")
   challengeId Int        @map("challenge_id")
-  userId      String     @map("user_id")
+  userId      Int        @map("user_id")
   title       String     @db.Text
   content     String     @db.Text
   originalUrl String?    @map("original_url")
@@ -72,7 +104,7 @@ model Work {
 
 model Feedback {
   id        Int      @id @default(autoincrement()) @map("feedback_pk")
-  userId    String   @map("user_pk")
+  userId    Int      @map("user_pk")
   workId    Int      @map("work_pk")
   content   String   @db.Text
   createdAt DateTime @default(now()) @map("created_at")
@@ -87,7 +119,7 @@ model Feedback {
 }
 
 model Like {
-  userId    String   @map("user_pk")
+  userId    Int      @map("user_pk")
   workId    Int      @map("work_pk")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -100,7 +132,7 @@ model Like {
 
 model Notification {
   id          Int              @id @default(autoincrement()) @map("notification_pk")
-  userId      String           @map("user_pk")
+  userId      Int              @map("user_pk")
   challengeId Int?             @map("challenge_pk")
   workId      Int?             @map("work_pk")
   type        NotificationType @map("type")
@@ -114,33 +146,4 @@ model Notification {
   @@index([userId])
   @@index([workId])
   @@map("notification")
-}
-
-enum ProfileImage {
-  ADMIN  // 0
-  USER   // 1
-}
-
-enum UserRole {
-  ADMIN  // 0
-  USER   // 1
-}
-
-enum UserGrade {
-  EXPERT  // 0
-  NORMAL  // 1
-}
-
-model OAuthAccount {
-  id           Int      @id @default(autoincrement())
-  provider     String   // "google"
-  providerId   String   // Google sub
-  email        String?  // 구글 이메일
-  userId       Int
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
-
-  @@unique([provider, providerId])
-  @@index([userId])
-  @@map("oauth_accounts")
 }
