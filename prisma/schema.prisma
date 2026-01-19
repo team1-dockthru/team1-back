@@ -32,28 +32,28 @@ model User {
 }
 
 enum ProfileImage {
-  ADMIN
-  USER
+  ADMIN  // 0
+  USER   // 1
 }
 
 enum UserRole {
-  ADMIN
-  USER
+  ADMIN  // 0
+  USER   // 1
 }
 
 enum UserGrade {
-  EXPERT
-  NORMAL
+  EXPERT  // 0
+  NORMAL  // 1
 }
 
 model OAuthAccount {
-  id         Int      @id @default(autoincrement())
-  provider   String // "google"
-  providerId String // Google sub
-  email      String? // 구글 이메일
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  provider     String   // "google"
+  providerId   String   // Google sub
+  email        String?  // 구글 이메일
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
 
   @@unique([provider, providerId])
   @@index([userId])
