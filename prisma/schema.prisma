@@ -23,10 +23,13 @@ model User {
 
   oauthAccounts OAuthAccount[]
 
-  works         Work[]
-  feedbacks     Feedback[]
-  likes         Like[]
-  notifications Notification[]
+  works                Work[]
+  feedbacks            Feedback[]
+  likes                Like[]
+  notifications        Notification[]
+  challengeRequests    ChallengeRequest[]
+  challenges           Challenge[]
+  challengeParticipants ChallengeParticipant[]
 
   @@map("users")
 }
@@ -80,6 +83,29 @@ enum NotificationType {
   FEEDBACK_DELETED
 }
 
+enum DocType {
+  OFFICIAL_DOCUMENT // 공식문서
+  BLOG              // 블로그
+}
+
+enum ChallengeStatus {
+  IN_PROGRESS // 진행중
+  CLOSED      // 마감
+}
+
+enum ParticipantStatus {
+  PENDING      // 승인 대기
+  REJECTED     // 신청 거절
+  APPROVED     // 신청승인
+  CHALLENGE_DELETED // 챌린지 삭제
+}
+
+enum RequestStatus {
+  PENDING  // 신청중
+  REJECTED // 거절
+  CANCELLED // 취소
+}
+
 model Work {
   id          Int        @id @default(autoincrement()) @map("work_id")
   challengeId Int        @map("challenge_id")
@@ -93,6 +119,7 @@ model Work {
   submittedAt DateTime?  @map("submitted_at")
 
   user          User           @relation(fields: [userId], references: [id])
+  challenge     Challenge      @relation(fields: [challengeId], references: [id])
   feedbacks     Feedback[]
   likes         Like[]
   notifications Notification[]
@@ -140,10 +167,78 @@ model Notification {
   createdAt   DateTime         @default(now()) @map("created_at")
   readAt      DateTime?        @map("read_at")
 
-  user User  @relation(fields: [userId], references: [id])
-  work Work? @relation(fields: [workId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+  work      Work?      @relation(fields: [workId], references: [id])
+  challenge Challenge? @relation(fields: [challengeId], references: [id])
 
   @@index([userId])
   @@index([workId])
+  @@index([challengeId])
   @@map("notification")
+}
+
+model ChallengeRequest {
+  id            Int           @id @default(autoincrement()) @map("challenge_request_pk")
+  userId        Int           @map("user_pk")
+  title         String        @db.Text
+  sourceUrl     String        @map("source_url")
+  field         String        @db.Text
+  docType       DocType       @map("doc_type")
+  deadlineAt    DateTime      @map("deadline_at")
+  maxParticipants Int         @map("max_participants")
+  content       String        @db.Text
+  requestStatus RequestStatus @default(PENDING) @map("request_status")
+  adminReason   String?       @db.Text @map("admin_reason")
+  processedAt   DateTime?     @map("processed_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  user      User        @relation(fields: [userId], references: [id])
+  challenges Challenge[]
+
+  @@index([userId])
+  @@map("challenge_request")
+}
+
+model Challenge {
+  id                Int              @id @default(autoincrement()) @map("challenge_pk")
+  userId            Int              @map("user_pk")
+  challengeRequestId Int?            @map("challenge_request_pk")
+  title             String           @db.Text
+  sourceUrl         String           @map("source_url")
+  field             String           @db.Text
+  docType           DocType           @map("doc_type")
+  deadlineAt        DateTime         @map("deadline_at")
+  maxParticipants   Int              @map("max_participants")
+  content           String           @db.Text
+  challengeStatus   ChallengeStatus  @default(IN_PROGRESS) @map("challenge_status")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  user                User                 @relation(fields: [userId], references: [id])
+  challengeRequest    ChallengeRequest?     @relation(fields: [challengeRequestId], references: [id])
+  works               Work[]
+  participants        ChallengeParticipant[]
+  notifications       Notification[]
+
+  @@index([userId])
+  @@index([challengeRequestId])
+  @@map("challenge")
+}
+
+model ChallengeParticipant {
+  id                Int               @id @default(autoincrement()) @map("challenge_participant_pk")
+  userId            Int               @map("user_pk")
+  challengeId       Int               @map("challenge_pk")
+  participantStatus ParticipantStatus @default(PENDING) @map("participant_status")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  user      User      @relation(fields: [userId], references: [id])
+  challenge Challenge @relation(fields: [challengeId], references: [id])
+
+  @@unique([userId, challengeId])
+  @@index([userId])
+  @@index([challengeId])
+  @@map("challenge_participant")
 }

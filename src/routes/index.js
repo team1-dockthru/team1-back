@@ -2,6 +2,7 @@ import { Router } from "express";
 import authRoutes from "../modules/auth/auth.routes.js";
 import userRoutes from "./user.routes.js";
 import workRoutes from "../modules/work/work.routes.js";
+import challengeRoutes from "../modules/challenges/challenges.routes.js";
 
 const router = Router();
 
@@ -13,6 +14,7 @@ router.get("/", (req, res) => {
       auth: "/api/auth",
       users: "/api/users",
       works: "/api/works",
+      challenges: "/api/challenges",
     },
   });
 });
@@ -20,5 +22,6 @@ router.get("/", (req, res) => {
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/works", workRoutes);
+router.use("/challenges", challengeRoutes);
 
 export default router;

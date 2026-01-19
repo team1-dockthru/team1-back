@@ -3,6 +3,7 @@ import cors from "cors";
 
 import authRoutes from "./modules/auth/auth.routes.js";
 import healthRouter from "./modules/health/health.routes.js";
+import challengeRoutes from "./modules/challenges/challenges.routes.js";
 
 import errorMiddleware from "./middlewares/error.middleware.js";
 import {
@@ -29,6 +30,7 @@ swaggerSetup(app);
 app.use("/health", healthRouter);
 app.use("/auth", apiLimiter);
 app.use("/auth", authRoutes);
+app.use("/challenges", challengeRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "요청한 리소스를 찾을 수 없습니다." });

@@ -185,6 +185,215 @@ const options = {
             },
           },
         },
+        Challenge: {
+          type: "object",
+          properties: {
+            id: {
+              type: "integer",
+              description: "챌린지 ID",
+              example: 1,
+            },
+            userId: {
+              type: "integer",
+              description: "생성자 사용자 ID",
+              example: 1,
+            },
+            challengeRequestId: {
+              type: "integer",
+              nullable: true,
+              description: "챌린지 요청 ID (선택사항)",
+              example: 1,
+            },
+            title: {
+              type: "string",
+              description: "챌린지 제목",
+              example: "React 공식 문서 번역 챌린지",
+            },
+            sourceUrl: {
+              type: "string",
+              description: "원본 문서 URL",
+              example: "https://react.dev/learn",
+            },
+            field: {
+              type: "string",
+              description: "분야",
+              example: "프론트엔드",
+            },
+            docType: {
+              type: "string",
+              enum: ["OFFICIAL_DOCUMENT", "BLOG"],
+              description: "문서 타입",
+              example: "OFFICIAL_DOCUMENT",
+            },
+            deadlineAt: {
+              type: "string",
+              format: "date-time",
+              description: "마감일시",
+              example: "2024-12-31T23:59:59.000Z",
+            },
+            maxParticipants: {
+              type: "integer",
+              description: "최대 참가자 수",
+              example: 10,
+            },
+            content: {
+              type: "string",
+              description: "챌린지 설명",
+              example: "React 공식 문서를 한국어로 번역하는 챌린지입니다.",
+            },
+            challengeStatus: {
+              type: "string",
+              enum: ["IN_PROGRESS", "CLOSED"],
+              description: "챌린지 상태",
+              example: "IN_PROGRESS",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "생성일시",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              description: "수정일시",
+            },
+            user: {
+              type: "object",
+              description: "생성자 정보",
+              properties: {
+                id: { type: "integer", example: 1 },
+                nickname: { type: "string", example: "홍길동" },
+                profileImage: { type: "string", enum: ["ADMIN", "USER"], example: "USER" },
+              },
+            },
+            _count: {
+              type: "object",
+              description: "관련 데이터 개수",
+              properties: {
+                participants: { type: "integer", example: 5 },
+                works: { type: "integer", example: 3 },
+              },
+            },
+          },
+        },
+        CreateChallengeRequest: {
+          type: "object",
+          required: ["title", "sourceUrl", "field", "docType", "deadlineAt", "maxParticipants", "content"],
+          properties: {
+            title: {
+              type: "string",
+              description: "챌린지 제목",
+              example: "React 공식 문서 번역 챌린지",
+            },
+            sourceUrl: {
+              type: "string",
+              description: "원본 문서 URL",
+              example: "https://react.dev/learn",
+            },
+            field: {
+              type: "string",
+              description: "분야",
+              example: "프론트엔드",
+            },
+            docType: {
+              type: "string",
+              enum: ["OFFICIAL_DOCUMENT", "BLOG"],
+              description: "문서 타입",
+              example: "OFFICIAL_DOCUMENT",
+            },
+            deadlineAt: {
+              type: "string",
+              format: "date-time",
+              description: "마감일시 (ISO 8601 형식)",
+              example: "2024-12-31T23:59:59.000Z",
+            },
+            maxParticipants: {
+              type: "integer",
+              minimum: 1,
+              description: "최대 참가자 수",
+              example: 10,
+            },
+            content: {
+              type: "string",
+              description: "챌린지 설명",
+              example: "React 공식 문서를 한국어로 번역하는 챌린지입니다.",
+            },
+            challengeRequestId: {
+              type: "integer",
+              nullable: true,
+              description: "챌린지 요청 ID (선택사항)",
+              example: 1,
+            },
+          },
+        },
+        UpdateChallengeRequest: {
+          type: "object",
+          properties: {
+            title: {
+              type: "string",
+              description: "챌린지 제목",
+              example: "수정된 챌린지 제목",
+            },
+            sourceUrl: {
+              type: "string",
+              description: "원본 문서 URL",
+              example: "https://react.dev/learn",
+            },
+            field: {
+              type: "string",
+              description: "분야",
+              example: "프론트엔드",
+            },
+            docType: {
+              type: "string",
+              enum: ["OFFICIAL_DOCUMENT", "BLOG"],
+              description: "문서 타입",
+              example: "OFFICIAL_DOCUMENT",
+            },
+            deadlineAt: {
+              type: "string",
+              format: "date-time",
+              description: "마감일시 (ISO 8601 형식)",
+              example: "2024-12-31T23:59:59.000Z",
+            },
+            maxParticipants: {
+              type: "integer",
+              minimum: 1,
+              description: "최대 참가자 수",
+              example: 20,
+            },
+            content: {
+              type: "string",
+              description: "챌린지 설명",
+              example: "수정된 챌린지 설명입니다.",
+            },
+            challengeStatus: {
+              type: "string",
+              enum: ["IN_PROGRESS", "CLOSED"],
+              description: "챌린지 상태",
+              example: "CLOSED",
+            },
+          },
+        },
+        ChallengeResponse: {
+          type: "object",
+          properties: {
+            data: {
+              $ref: "#/components/schemas/Challenge",
+            },
+          },
+        },
+        ChallengeListResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/Challenge",
+              },
+            },
+          },
+        },
       },
     },
     tags: [
@@ -199,6 +408,10 @@ const options = {
       {
         name: "Health",
         description: "헬스 체크 API",
+      },
+      {
+        name: "Challenge",
+        description: "챌린지 관련 API",
       },
     ],
   },
