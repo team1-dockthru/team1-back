@@ -394,6 +394,161 @@ const options = {
             },
           },
         },
+        Work: {
+          type: "object",
+          properties: {
+            id: {
+              type: "integer",
+              description: "작업물 ID",
+              example: 1,
+            },
+            userId: {
+              type: "integer",
+              description: "작성자 사용자 ID",
+              example: 1,
+            },
+            challengeId: {
+              type: "integer",
+              description: "챌린지 ID",
+              example: 1,
+            },
+            title: {
+              type: "string",
+              description: "작업물 제목",
+              example: "React 문서 번역 작업물",
+            },
+            content: {
+              type: "string",
+              description: "작업물 내용",
+              example: "챕터 1~3 번역 내용을 정리했습니다.",
+            },
+            originalUrl: {
+              type: "string",
+              nullable: true,
+              description: "원본 작업물 URL",
+              example: "https://example.com/work/1",
+            },
+            workStatus: {
+              type: "string",
+              enum: ["draft", "done"],
+              description: "작업물 상태",
+              example: "draft",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "생성일시",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              description: "수정일시",
+            },
+            submittedAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+              description: "제출일시",
+            },
+          },
+        },
+        CreateWorkRequest: {
+          type: "object",
+          required: ["challengeId", "title", "content"],
+          properties: {
+            challengeId: {
+              type: "integer",
+              description: "챌린지 ID",
+              example: 1,
+            },
+            title: {
+              type: "string",
+              description: "작업물 제목",
+              example: "React 문서 번역 작업물",
+            },
+            content: {
+              type: "string",
+              description: "작업물 내용",
+              example: "챕터 1~3 번역 내용을 정리했습니다.",
+            },
+            originalUrl: {
+              type: "string",
+              nullable: true,
+              description: "원본 작업물 URL",
+              example: "https://example.com/work/1",
+            },
+          },
+        },
+        UpdateWorkRequest: {
+          type: "object",
+          properties: {
+            title: {
+              type: "string",
+              description: "작업물 제목",
+              example: "수정된 작업물 제목",
+            },
+            content: {
+              type: "string",
+              description: "작업물 내용",
+              example: "수정된 작업물 내용입니다.",
+            },
+            originalUrl: {
+              type: "string",
+              nullable: true,
+              description: "원본 작업물 URL",
+              example: "https://example.com/work/1",
+            },
+            workStatus: {
+              type: "string",
+              enum: ["draft", "done"],
+              description: "작업물 상태",
+              example: "done",
+            },
+          },
+        },
+        WorkResponse: {
+          type: "object",
+          properties: {
+            data: {
+              $ref: "#/components/schemas/Work",
+            },
+          },
+        },
+        WorkListResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/Work",
+              },
+            },
+            page: {
+              type: "integer",
+              example: 1,
+            },
+            limit: {
+              type: "integer",
+              example: 5,
+            },
+            total: {
+              type: "integer",
+              example: 12,
+            },
+            totalPages: {
+              type: "integer",
+              example: 3,
+            },
+            hasNext: {
+              type: "boolean",
+              example: true,
+            },
+            hasPrev: {
+              type: "boolean",
+              example: false,
+            },
+          },
+        },
       },
     },
     tags: [
@@ -412,6 +567,10 @@ const options = {
       {
         name: "Challenge",
         description: "챌린지 관련 API",
+      },
+      {
+        name: "Work",
+        description: "작업물 관련 API",
       },
     ],
   },
