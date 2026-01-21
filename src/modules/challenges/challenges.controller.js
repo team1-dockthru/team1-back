@@ -4,6 +4,8 @@ import {
   listChallenges,
   updateChallenge,
   deleteChallenge,
+  adminDeleteChallenge,
+  adminRejectChallenge,
   createParticipant,
   listParticipants,
   updateParticipantStatus,
@@ -188,6 +190,58 @@ export async function remove(req, res, next) {
 
     await deleteChallenge({ id, userId: req.user.userId });
     return res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function adminDelete(req, res, next) {
+  try {
+    const id = parseIntStrict(req.params.id);
+    if (!id) {
+      return res.status(400).json({ message: "유효한 challenge id가 필요합니다." });
+    }
+
+    const { adminReason } = req.body || {};
+
+    if (!adminReason || typeof adminReason !== "string" || adminReason.trim() === "") {
+      return res.status(400).json({ message: "삭제 사유는 필수입니다." });
+    }
+
+    await adminDeleteChallenge({
+      id,
+      userId: req.user.userId,
+      role: req.user.role,
+      adminReason,
+    });
+
+    return res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function adminReject(req, res, next) {
+  try {
+    const id = parseIntStrict(req.params.id);
+    if (!id) {
+      return res.status(400).json({ message: "유효한 challenge id가 필요합니다." });
+    }
+
+    const { adminReason } = req.body || {};
+
+    if (!adminReason || typeof adminReason !== "string" || adminReason.trim() === "") {
+      return res.status(400).json({ message: "거절 사유는 필수입니다." });
+    }
+
+    const challenge = await adminRejectChallenge({
+      id,
+      userId: req.user.userId,
+      role: req.user.role,
+      adminReason,
+    });
+
+    return res.status(200).json({ data: challenge });
   } catch (err) {
     next(err);
   }

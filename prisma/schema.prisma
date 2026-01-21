@@ -212,6 +212,8 @@ model Challenge {
   maxParticipants    Int             @map("max_participants")
   content            String          @db.Text
   challengeStatus    ChallengeStatus @default(IN_PROGRESS) @map("challenge_status")
+  adminReason        String?         @db.Text @map("admin_reason")
+  deletedAt          DateTime?       @map("deleted_at")
   createdAt          DateTime        @default(now()) @map("created_at")
   updatedAt          DateTime        @updatedAt @map("updated_at")
 
