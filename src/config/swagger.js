@@ -549,6 +549,111 @@ const options = {
             },
           },
         },
+        Feedback: {
+          type: "object",
+          properties: {
+            id: {
+              type: "integer",
+              description: "피드백 ID",
+              example: 1,
+            },
+            userId: {
+              type: "integer",
+              description: "작성자 사용자 ID",
+              example: 1,
+            },
+            workId: {
+              type: "integer",
+              description: "작업물 ID",
+              example: 1,
+            },
+            content: {
+              type: "string",
+              description: "피드백 내용",
+              example: "잘 읽었습니다. 용어 통일만 조금 더 해주세요.",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "생성일시",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              description: "수정일시",
+            },
+          },
+        },
+        CreateFeedbackRequest: {
+          type: "object",
+          required: ["workId", "content"],
+          properties: {
+            workId: {
+              type: "integer",
+              description: "작업물 ID",
+              example: 1,
+            },
+            content: {
+              type: "string",
+              description: "피드백 내용",
+              example: "좋은 번역이네요. 마지막 문단만 다듬어 주세요.",
+            },
+          },
+        },
+        UpdateFeedbackRequest: {
+          type: "object",
+          required: ["content"],
+          properties: {
+            content: {
+              type: "string",
+              description: "피드백 내용",
+              example: "수정된 피드백입니다.",
+            },
+          },
+        },
+        FeedbackResponse: {
+          type: "object",
+          properties: {
+            data: {
+              $ref: "#/components/schemas/Feedback",
+            },
+          },
+        },
+        FeedbackListResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/Feedback",
+              },
+            },
+            page: {
+              type: "integer",
+              example: 1,
+            },
+            limit: {
+              type: "integer",
+              example: 3,
+            },
+            total: {
+              type: "integer",
+              example: 12,
+            },
+            totalPages: {
+              type: "integer",
+              example: 4,
+            },
+            hasNext: {
+              type: "boolean",
+              example: true,
+            },
+            hasPrev: {
+              type: "boolean",
+              example: false,
+            },
+          },
+        },
       },
     },
     tags: [
@@ -571,6 +676,10 @@ const options = {
       {
         name: "Work",
         description: "작업물 관련 API",
+      },
+      {
+        name: "Feedback",
+        description: "피드백 관련 API",
       },
     ],
   },
