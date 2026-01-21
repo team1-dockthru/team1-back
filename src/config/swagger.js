@@ -692,6 +692,77 @@ const options = {
             },
           },
         },
+        Notification: {
+          type: "object",
+          properties: {
+            id: {
+              type: "integer",
+              description: "알림 ID",
+              example: 1,
+            },
+            type: {
+              type: "string",
+              description: "알림 타입",
+              example: "WORK_CREATED",
+            },
+            message: {
+              type: "string",
+              description: "알림 메시지",
+              example: "새 작업물이 등록되었습니다.",
+            },
+            challengeId: {
+              type: "integer",
+              nullable: true,
+              description: "챌린지 ID",
+              example: 1,
+            },
+            workId: {
+              type: "integer",
+              nullable: true,
+              description: "작업물 ID",
+              example: 10,
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "생성일시",
+            },
+            readAt: {
+              type: "string",
+              format: "date-time",
+              nullable: true,
+              description: "읽음 처리 시각",
+            },
+          },
+        },
+        NotificationResponse: {
+          type: "object",
+          properties: {
+            data: {
+              $ref: "#/components/schemas/Notification",
+            },
+          },
+        },
+        NotificationListResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/Notification",
+              },
+            },
+            nextCursor: {
+              type: "string",
+              nullable: true,
+              example: "2024-04-01T12:00:00.000Z|42",
+            },
+            hasNext: {
+              type: "boolean",
+              example: true,
+            },
+          },
+        },
       },
     },
     tags: [
@@ -722,6 +793,10 @@ const options = {
       {
         name: "Like",
         description: "좋아요 관련 API",
+      },
+      {
+        name: "Notification",
+        description: "알림 관련 API",
       },
     ],
   },
