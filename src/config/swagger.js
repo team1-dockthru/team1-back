@@ -654,6 +654,44 @@ const options = {
             },
           },
         },
+        Like: {
+          type: "object",
+          properties: {
+            userId: {
+              type: "integer",
+              description: "사용자 ID",
+              example: 1,
+            },
+            workId: {
+              type: "integer",
+              description: "작업물 ID",
+              example: 1,
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "생성일시",
+            },
+          },
+        },
+        LikeCount: {
+          type: "object",
+          properties: {
+            count: {
+              type: "integer",
+              description: "좋아요 개수",
+              example: 12,
+            },
+          },
+        },
+        LikeCountResponse: {
+          type: "object",
+          properties: {
+            data: {
+              $ref: "#/components/schemas/LikeCount",
+            },
+          },
+        },
       },
     },
     tags: [
@@ -680,6 +718,10 @@ const options = {
       {
         name: "Feedback",
         description: "피드백 관련 API",
+      },
+      {
+        name: "Like",
+        description: "좋아요 관련 API",
       },
     ],
   },

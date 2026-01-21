@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authenticateToken } from "../../middlewares/auth.middleware.js";
 import { create, getById, list, update, remove } from "./work.controller.js";
 import { feedbackByWorkRouter } from "../feedback/feedback.routes.js";
+import { likeByWorkRouter } from "../like/like.routes.js";
 
 const router = Router();
 
@@ -234,5 +235,8 @@ router.delete("/:id", authenticateToken, remove);
 
 // feedbacks nested under work
 router.use("/:workId/feedbacks", feedbackByWorkRouter);
+
+// likes nested under work
+router.use("/:workId/likes", likeByWorkRouter);
 
 export default router;
