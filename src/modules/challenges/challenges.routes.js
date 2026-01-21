@@ -6,6 +6,8 @@ import {
   list,
   update,
   remove,
+  adminDelete,
+  adminReject,
   createParticipantRequest,
   getParticipants,
   updateParticipant,
@@ -406,6 +408,138 @@ router.patch("/:id", authenticateToken, update);
  *                   message: "챌린지를 찾을 수 없습니다."
  */
 router.delete("/:id", authenticateToken, remove);
+
+/**
+ * @swagger
+ * /challenges/{id}/admin/delete:
+ *   delete:
+ *     tags: [Challenge]
+ *     summary: 챌린지 관리자 삭제
+ *     description: 관리자가 챌린지를 삭제합니다. 삭제 사유를 필수로 입력해야 합니다. 인증이 필요합니다.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 챌린지 ID
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - adminReason
+ *             properties:
+ *               adminReason:
+ *                 type: string
+ *                 description: 삭제 사유
+ *                 example: "부적절한 내용이 포함되어 있습니다."
+ *     responses:
+ *       204:
+ *         description: 챌린지 삭제 성공
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               missingReason:
+ *                 summary: 삭제 사유 없음
+ *                 value:
+ *                   message: "삭제 사유는 필수입니다."
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 삭제 권한 없음 (관리자만 가능)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               forbidden:
+ *                 summary: 권한 없음 예제
+ *                 value:
+ *                   message: "챌린지 삭제 권한이 없습니다."
+ *       404:
+ *         description: 챌린지를 찾을 수 없음
+ */
+router.delete("/:id/admin/delete", authenticateToken, adminDelete);
+
+/**
+ * @swagger
+ * /challenges/{id}/admin/reject:
+ *   patch:
+ *     tags: [Challenge]
+ *     summary: 챌린지 관리자 거절
+ *     description: 관리자가 챌린지를 거절합니다. 챌린지 상태를 CLOSED로 변경하고 거절 사유를 저장합니다. 인증이 필요합니다.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 챌린지 ID
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - adminReason
+ *             properties:
+ *               adminReason:
+ *                 type: string
+ *                 description: 거절 사유
+ *                 example: "부적절한 내용이 포함되어 있습니다."
+ *     responses:
+ *       200:
+ *         description: 챌린지 거절 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ChallengeResponse'
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               missingReason:
+ *                 summary: 거절 사유 없음
+ *                 value:
+ *                   message: "거절 사유는 필수입니다."
+ *               alreadyClosed:
+ *                 summary: 이미 마감됨
+ *                 value:
+ *                   message: "이미 마감된 챌린지는 거절할 수 없습니다."
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 거절 권한 없음 (관리자만 가능)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               forbidden:
+ *                 summary: 권한 없음 예제
+ *                 value:
+ *                   message: "챌린지 거절 권한이 없습니다."
+ *       404:
+ *         description: 챌린지를 찾을 수 없음
+ */
+router.patch("/:id/admin/reject", authenticateToken, adminReject);
 
 /**
  * @swagger

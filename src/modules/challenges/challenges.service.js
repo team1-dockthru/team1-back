@@ -155,6 +155,82 @@ export async function deleteChallenge({ id, userId }) {
   return prisma.challenge.delete({ where: { id } });
 }
 
+export async function adminDeleteChallenge({ id, userId, role, adminReason }) {
+  const existing = await prisma.challenge.findUnique({ where: { id } });
+
+  if (!existing) {
+    throw Object.assign(new Error("챌린지를 찾을 수 없습니다."), { status: 404 });
+  }
+
+  // 관리자만 삭제 가능
+  if (role !== "ADMIN") {
+    throw Object.assign(new Error("챌린지 삭제 권한이 없습니다."), { status: 403 });
+  }
+
+  // 삭제 시 adminReason 필수
+  if (!adminReason || typeof adminReason !== "string" || adminReason.trim() === "") {
+    throw Object.assign(new Error("삭제 사유는 필수입니다."), { status: 400 });
+  }
+
+  // 삭제 전에 adminReason과 deletedAt을 저장
+  await prisma.challenge.update({
+    where: { id },
+    data: {
+      adminReason,
+      deletedAt: new Date(),
+    },
+  });
+
+  // 그 후 삭제
+  return prisma.challenge.delete({ where: { id } });
+}
+
+export async function adminRejectChallenge({ id, userId, role, adminReason }) {
+  const existing = await prisma.challenge.findUnique({ where: { id } });
+
+  if (!existing) {
+    throw Object.assign(new Error("챌린지를 찾을 수 없습니다."), { status: 404 });
+  }
+
+  // 관리자만 거절 가능
+  if (role !== "ADMIN") {
+    throw Object.assign(new Error("챌린지 거절 권한이 없습니다."), { status: 403 });
+  }
+
+  // 이미 마감된 챌린지는 거절할 수 없음
+  if (existing.challengeStatus === CHALLENGE_STATUS.CLOSED) {
+    throw Object.assign(new Error("이미 마감된 챌린지는 거절할 수 없습니다."), { status: 400 });
+  }
+
+  // 거절 시 adminReason 필수
+  if (!adminReason || typeof adminReason !== "string" || adminReason.trim() === "") {
+    throw Object.assign(new Error("거절 사유는 필수입니다."), { status: 400 });
+  }
+
+  return prisma.challenge.update({
+    where: { id },
+    data: {
+      challengeStatus: CHALLENGE_STATUS.CLOSED,
+      adminReason,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+          profileImage: true,
+        },
+      },
+      _count: {
+        select: {
+          participants: true,
+          works: true,
+        },
+      },
+    },
+  });
+}
+
 export async function createParticipant({ challengeId, userId }) {
   // 챌린지 존재 확인
   const challenge = await prisma.challenge.findUnique({
