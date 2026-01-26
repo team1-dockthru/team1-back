@@ -872,6 +872,73 @@ const ensureNotificationGetPath = (spec) => {
   return spec;
 };
 
+const ensureFeedbackListPath = (spec) => {
+  if (!spec.paths) spec.paths = {};
+  const existing = spec.paths["/works/{workId}/feedbacks"] || {};
+
+  if (!existing.get) {
+    spec.paths["/works/{workId}/feedbacks"] = {
+      ...existing,
+      get: {
+        tags: ["Feedback"],
+        summary: "피드백 목록 조회",
+        description: "피드백 목록을 조회합니다. 필터링과 페이지네이션을 지원합니다.",
+        parameters: [
+          {
+            in: "path",
+            name: "workId",
+            required: true,
+            schema: { type: "integer" },
+            description: "작업물 ID",
+            example: 1,
+          },
+          {
+            in: "query",
+            name: "workId",
+            schema: { type: "integer" },
+            description: "작업물 ID로 필터링",
+            example: 1,
+          },
+          {
+            in: "query",
+            name: "userId",
+            schema: { type: "integer" },
+            description: "작성자 사용자 ID로 필터링",
+            example: 1,
+          },
+          {
+            in: "query",
+            name: "page",
+            schema: { type: "integer" },
+            description: "페이지 번호 (기본값: 1, 3개씩)",
+            example: 1,
+          },
+        ],
+        responses: {
+          200: {
+            description: "피드백 목록 조회 성공",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/FeedbackListResponse" },
+              },
+            },
+          },
+          400: {
+            description: "잘못된 요청",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
+          },
+        },
+      },
+    };
+  }
+
+  return spec;
+};
+
 const getServerUrl = (req) => {
   const xfProto = req.get("x-forwarded-proto");
   const protocol = xfProto ? xfProto.split(",")[0] : "https";
@@ -899,7 +966,7 @@ const createDynamicSpec = (req) => {
     ],
   };
 
-  return ensureNotificationGetPath(dynamicSpec);
+  return ensureFeedbackListPath(ensureNotificationGetPath(dynamicSpec));
 };
 
 export const swaggerSetup = (app) => {
