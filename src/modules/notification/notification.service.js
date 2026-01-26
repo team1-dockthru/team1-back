@@ -24,7 +24,12 @@ const buildCursorFilter = (cursor) => {
   };
 };
 
-export async function listNotifications({ userId, cursor, limit = DEFAULT_PAGE_SIZE, includeRead = false }) {
+export async function listNotifications({
+  userId,
+  cursor,
+  limit = DEFAULT_PAGE_SIZE,
+  includeRead = false,
+}) {
   const where = {
     userId,
     ...(!includeRead ? { readAt: null } : {}),
@@ -33,6 +38,7 @@ export async function listNotifications({ userId, cursor, limit = DEFAULT_PAGE_S
 
   // 다음 페이지 여부 확인을 위해 limit+1 조회.
   const take = limit + 1;
+
   const items = await prisma.notification.findMany({
     where,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -82,6 +88,7 @@ export async function markNotificationRead({ id, userId }) {
   if (existing.userId !== userId) {
     throw Object.assign(new Error("읽음 처리 권한이 없습니다."), { status: 403 });
   }
+
   // 멱등 처리: 이미 읽음이면 그대로 반환.
   if (existing.readAt) {
     return existing;
