@@ -2,6 +2,7 @@ import prisma from "../../config/database.js";
 
 const DEFAULT_PAGE_SIZE = 10;
 
+// 무한 스크롤용 커서 필터 생성.
 const buildCursorFilter = (cursor) => {
   if (!cursor) return {};
 
@@ -30,6 +31,7 @@ export async function listNotifications({ userId, cursor, limit = DEFAULT_PAGE_S
     ...buildCursorFilter(cursor),
   };
 
+  // 다음 페이지 여부 확인을 위해 limit+1 조회.
   const take = limit + 1;
   const items = await prisma.notification.findMany({
     where,
@@ -50,6 +52,7 @@ export async function listNotifications({ userId, cursor, limit = DEFAULT_PAGE_S
   const sliced = items.slice(0, limit);
   const lastItem = sliced[sliced.length - 1];
 
+  // 다음 스크롤 요청용 커서 생성.
   return {
     items: sliced,
     nextCursor: hasNext && lastItem ? `${lastItem.createdAt.toISOString()}|${lastItem.id}` : null,
@@ -58,6 +61,7 @@ export async function listNotifications({ userId, cursor, limit = DEFAULT_PAGE_S
 }
 
 export async function markNotificationRead({ id, userId }) {
+  // 읽음 처리 전 소유권 확인.
   const existing = await prisma.notification.findUnique({
     where: { id },
     select: {
@@ -78,10 +82,12 @@ export async function markNotificationRead({ id, userId }) {
   if (existing.userId !== userId) {
     throw Object.assign(new Error("읽음 처리 권한이 없습니다."), { status: 403 });
   }
+  // 멱등 처리: 이미 읽음이면 그대로 반환.
   if (existing.readAt) {
     return existing;
   }
 
+  // 읽음 시각 기록.
   return prisma.notification.update({
     where: { id },
     data: { readAt: new Date() },
