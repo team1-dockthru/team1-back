@@ -3,6 +3,7 @@ import prisma from "../../config/database.js";
 const DEFAULT_PAGE_SIZE = 3;
 
 export async function createFeedback({ userId, workId, content }) {
+  // 사용자 피드백 생성.
   return prisma.feedback.create({
     data: {
       userId,
@@ -24,6 +25,7 @@ export async function listFeedbacks({ workId, userId, page = 1, limit = DEFAULT_
   if (typeof workId === "number") where.workId = workId;
   if (typeof userId === "number") where.userId = userId;
 
+  // 피드백 목록 오프셋 페이지네이션.
   const skip = (page - 1) * limit;
   const [items, total] = await Promise.all([
     prisma.feedback.findMany({
@@ -39,6 +41,7 @@ export async function listFeedbacks({ workId, userId, page = 1, limit = DEFAULT_
 }
 
 export async function updateFeedback({ id, userId, data }) {
+  // 수정 전 존재/소유권 확인.
   const existing = await prisma.feedback.findUnique({ where: { id } });
 
   if (!existing) {
@@ -55,6 +58,7 @@ export async function updateFeedback({ id, userId, data }) {
 }
 
 export async function deleteFeedback({ id, userId }) {
+  // 삭제 전 존재/소유권 확인.
   const existing = await prisma.feedback.findUnique({ where: { id } });
 
   if (!existing) {

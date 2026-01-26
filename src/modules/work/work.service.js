@@ -7,6 +7,7 @@ const WORK_STATUS = {
 const DEFAULT_PAGE_SIZE = 5;
 
 export async function createWork({ userId, challengeId, title, content, originalUrl }) {
+  // 챌린지 초안 작업물 생성.
   return prisma.work.create({
     data: {
       userId, 
@@ -32,6 +33,7 @@ export async function listWorks({ challengeId, userId, workStatus, page = 1, lim
   if (typeof userId === "string") where.userId = userId;
   if (workStatus) where.workStatus = workStatus;
 
+  // 좋아요 수 기준 정렬 + 오프셋 페이지네이션.
   const skip = (page - 1) * limit;
   const [items, total] = await Promise.all([
     prisma.work.findMany({
@@ -47,6 +49,7 @@ export async function listWorks({ challengeId, userId, workStatus, page = 1, lim
 }
 
 export async function updateWork({ id, userId, data }) {
+  // 소유권 확인 및 상태 변경 시 submittedAt 처리.
   const existing = await prisma.work.findUnique({ where: { id } });
 
   if (!existing) {
@@ -71,6 +74,7 @@ export async function updateWork({ id, userId, data }) {
 }
 
 export async function deleteWork({ id, userId }) {
+  // 삭제 전 소유권 확인.
   const existing = await prisma.work.findUnique({ where: { id } });
 
   if (!existing) {

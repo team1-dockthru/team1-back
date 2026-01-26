@@ -5,6 +5,7 @@ import authRoutes from "./modules/auth/auth.routes.js";
 import healthRouter from "./modules/health/health.routes.js";
 import workRoutes from "./modules/work/work.routes.js";
 import challengeRoutes from "./modules/challenges/challenges.routes.js";
+import notificationRoutes from "./modules/notification/notification.routes.js";
 
 import errorMiddleware from "./middlewares/error.middleware.js";
 import { securityHeaders, apiLimiter } from "./middlewares/security.middleware.js";
@@ -36,6 +37,7 @@ app.use("/auth", authRoutes);
 // routes
 app.use("/works", workRoutes);
 app.use("/challenges", challengeRoutes);
+app.use("/notifications", notificationRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "요청한 리소스를 찾을 수 없습니다." });
