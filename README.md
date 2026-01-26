@@ -141,3 +141,4 @@ Render 대시보드의 **Environment** 섹션에서 다음 환경 변수를 설�
 - API 서버: `https://your-app.onrender.com`
 - Swagger 문서: `https://your-app.onrender.com/api-docs`
 - 헬스 체크: `https://your-app.onrender.com/health/db`
+
