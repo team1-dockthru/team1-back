@@ -115,7 +115,7 @@ router.get("/", list);
  *         name: requestStatus
  *         schema:
  *           type: string
- *           enum: [PENDING, REJECTED, CANCELLED]
+ *           enum: [PENDING, APPROVED, REJECTED, CANCELLED]
  *         description: 신청 상태로 필터링
  *         example: PENDING
  *     responses:
@@ -983,7 +983,7 @@ router.delete("/:id/participants/:participantId", authenticateToken, removeParti
  *                       type: string
  *                     requestStatus:
  *                       type: string
- *                       enum: [PENDING, REJECTED, CANCELLED]
+ *                       enum: [PENDING, APPROVED, REJECTED, CANCELLED]
  *                     createdAt:
  *                       type: string
  *                       format: date-time
@@ -1138,9 +1138,9 @@ router.delete("/requests/:id", authenticateToken, removeRequest);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [REJECTED]
- *                 description: 변경할 신청 상태 (승인은 별도 엔드포인트에서 챌린지 생성으로 처리)
- *                 example: REJECTED
+ *                 enum: [APPROVED, REJECTED]
+ *                 description: 변경할 신청 상태 (APPROVED=승인, REJECTED=거절)
+ *                 example: APPROVED
  *               adminReason:
  *                 type: string
  *                 description: 거절 사유 (거절 시 필수)
