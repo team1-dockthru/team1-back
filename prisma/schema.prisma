@@ -120,7 +120,7 @@ model Work {
   submittedAt DateTime?  @map("submitted_at")
 
   user          User           @relation(fields: [userId], references: [id])
-  challenge     Challenge      @relation(fields: [challengeId], references: [id])
+  challenge     Challenge      @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   feedbacks     Feedback[]
   likes         Like[]
   notifications Notification[]
@@ -139,7 +139,7 @@ model Feedback {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id])
-  work Work @relation(fields: [workId], references: [id])
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([workId])
@@ -152,7 +152,7 @@ model Like {
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
-  work Work @relation(fields: [workId], references: [id])
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
 
   @@id([userId, workId])
   @@map("like")
@@ -169,8 +169,8 @@ model Notification {
   readAt      DateTime?        @map("read_at")
 
   user      User       @relation(fields: [userId], references: [id])
-  work      Work?      @relation(fields: [workId], references: [id])
-  challenge Challenge? @relation(fields: [challengeId], references: [id])
+  work      Work?      @relation(fields: [workId], references: [id], onDelete: Cascade)
+  challenge Challenge? @relation(fields: [challengeId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([workId])
@@ -238,7 +238,7 @@ model ChallengeParticipant {
   updatedAt         DateTime          @updatedAt @map("updated_at")
 
   user      User      @relation(fields: [userId], references: [id])
-  challenge Challenge @relation(fields: [challengeId], references: [id])
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, challengeId])
   @@index([userId])
