@@ -99,6 +99,78 @@ router.get("/", list);
 
 /**
  * @swagger
+ * /challenges/requests:
+ *   get:
+ *     tags: [Challenge]
+ *     summary: 챌린지 생성 신청 목록 조회
+ *     description: 챌린지 생성 신청 목록을 조회합니다. 필터링 옵션을 사용할 수 있습니다.
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: integer
+ *         description: 특정 사용자의 신청만 조회
+ *         example: 1
+ *       - in: query
+ *         name: requestStatus
+ *         schema:
+ *           type: string
+ *           enum: [PENDING, REJECTED, CANCELLED]
+ *         description: 신청 상태로 필터링
+ *         example: PENDING
+ *     responses:
+ *       200:
+ *         description: 챌린지 생성 신청 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ChallengeRequestListResponse'
+ *             examples:
+ *               success:
+ *                 summary: 챌린지 생성 신청 목록 조회 응답 예시
+ *                 value:
+ *                   data:
+ *                     - id: 1
+ *                       userId: 1
+ *                       title: "React 공식 문서 번역 챌린지"
+ *                       sourceUrl: "https://react.dev/learn"
+ *                       field: "프론트엔드"
+ *                       docType: "OFFICIAL_DOCUMENT"
+ *                       deadlineAt: "2024-12-31T23:59:59.000Z"
+ *                       maxParticipants: 10
+ *                       content: "React 공식 문서를 한국어로 번역하는 챌린지입니다."
+ *                       requestStatus: "PENDING"
+ *                       adminReason: null
+ *                       processedAt: null
+ *                       createdAt: "2024-01-15T00:00:00.000Z"
+ *                       updatedAt: "2024-01-15T00:00:00.000Z"
+ *                       challenges: []
+ *                       _count: { challenges: 0 }
+ *                       user: { id: 1, nickname: "홍길동", profileImage: "USER" }
+ *                     - id: 2
+ *                       userId: 1
+ *                       title: "Next.js 블로그 번역 챌린지"
+ *                       sourceUrl: "https://nextjs.org/blog"
+ *                       field: "프론트엔드"
+ *                       docType: "BLOG"
+ *                       maxParticipants: 20
+ *                       deadlineAt: "2024-12-31T23:59:59.000Z"
+ *                       content: "Next.js 공식 블로그 포스트를 번역하는 챌린지입니다."
+ *                       requestStatus: "PENDING"
+ *                       adminReason: null
+ *                       processedAt: null
+ *                       createdAt: "2024-01-10T00:00:00.000Z"
+ *                       updatedAt: "2024-01-10T00:00:00.000Z"
+ *                       challenges: [{ id: 5 }]
+ *                       _count: { challenges: 1 }
+ *                       user: { id: 1, nickname: "홍길동", profileImage: "USER" }
+ *       400:
+ *         description: 잘못된 요청
+ */
+router.get("/requests", listRequests);
+
+/**
+ * @swagger
  * /challenges/{id}:
  *   get:
  *     tags: [Challenge]
@@ -923,78 +995,6 @@ router.delete("/:id/participants/:participantId", authenticateToken, removeParti
  *         description: 인증 실패
  */
 router.post("/requests", authenticateToken, createRequest);
-
-/**
- * @swagger
- * /challenges/requests:
- *   get:
- *     tags: [Challenge]
- *     summary: 챌린지 생성 신청 목록 조회
- *     description: 챌린지 생성 신청 목록을 조회합니다. 필터링 옵션을 사용할 수 있습니다.
- *     parameters:
- *       - in: query
- *         name: userId
- *         schema:
- *           type: integer
- *         description: 특정 사용자의 신청만 조회
- *         example: 1
- *       - in: query
- *         name: requestStatus
- *         schema:
- *           type: string
- *           enum: [PENDING, REJECTED, CANCELLED]
- *         description: 신청 상태로 필터링
- *         example: PENDING
- *     responses:
- *       200:
- *         description: 챌린지 생성 신청 목록 조회 성공
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ChallengeRequestListResponse'
- *             examples:
- *               success:
- *                 summary: 챌린지 생성 신청 목록 조회 응답 예시
- *                 value:
- *                   data:
- *                     - id: 1
- *                       userId: 1
- *                       title: "React 공식 문서 번역 챌린지"
- *                       sourceUrl: "https://react.dev/learn"
- *                       field: "프론트엔드"
- *                       docType: "OFFICIAL_DOCUMENT"
- *                       deadlineAt: "2024-12-31T23:59:59.000Z"
- *                       maxParticipants: 10
- *                       content: "React 공식 문서를 한국어로 번역하는 챌린지입니다."
- *                       requestStatus: "PENDING"
- *                       adminReason: null
- *                       processedAt: null
- *                       createdAt: "2024-01-15T00:00:00.000Z"
- *                       updatedAt: "2024-01-15T00:00:00.000Z"
- *                       challenges: []
- *                       _count: { challenges: 0 }
- *                       user: { id: 1, nickname: "홍길동", profileImage: "USER" }
- *                     - id: 2
- *                       userId: 1
- *                       title: "Next.js 블로그 번역 챌린지"
- *                       sourceUrl: "https://nextjs.org/blog"
- *                       field: "프론트엔드"
- *                       docType: "BLOG"
- *                       maxParticipants: 20
- *                       deadlineAt: "2024-12-31T23:59:59.000Z"
- *                       content: "Next.js 공식 블로그 포스트를 번역하는 챌린지입니다."
- *                       requestStatus: "PENDING"
- *                       adminReason: null
- *                       processedAt: null
- *                       createdAt: "2024-01-10T00:00:00.000Z"
- *                       updatedAt: "2024-01-10T00:00:00.000Z"
- *                       challenges: [{ id: 5 }]
- *                       _count: { challenges: 1 }
- *                       user: { id: 1, nickname: "홍길동", profileImage: "USER" }
- *       400:
- *         description: 잘못된 요청
- */
-router.get("/requests", listRequests);
 
 /**
  * @swagger
