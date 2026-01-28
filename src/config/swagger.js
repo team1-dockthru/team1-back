@@ -28,6 +28,16 @@ const options = {
         },
       },
       schemas: {
+        ErrorResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "에러 메시지",
+              example: "에러가 발생했습니다.",
+            },
+          },
+        },
         User: {
           type: "object",
           properties: {
@@ -172,16 +182,6 @@ const options = {
                   $ref: "#/components/schemas/User",
                 },
               },
-            },
-          },
-        },
-        ErrorResponse: {
-          type: "object",
-          properties: {
-            message: {
-              type: "string",
-              description: "에러 메시지",
-              example: "에러가 발생했습니다.",
             },
           },
         },
@@ -392,6 +392,59 @@ const options = {
                 $ref: "#/components/schemas/Challenge",
               },
             },
+          },
+        },
+        ChallengeRequest: {
+          type: "object",
+          description: "챌린지 생성 신청. requestStatus=PENDING|REJECTED|CANCELLED. 승인 시 challenges[0] 존재.",
+          properties: {
+            id: { type: "integer", description: "신청 ID (테이블 No.)", example: 1 },
+            userId: { type: "integer" },
+            title: { type: "string" },
+            sourceUrl: { type: "string" },
+            field: { type: "string" },
+            docType: { type: "string", enum: ["OFFICIAL_DOCUMENT", "BLOG"] },
+            deadlineAt: { type: "string", format: "date-time" },
+            maxParticipants: { type: "integer" },
+            content: { type: "string" },
+            requestStatus: {
+              type: "string",
+              enum: ["PENDING", "REJECTED", "CANCELLED"],
+              description: "PENDING=신청중, REJECTED=거절, CANCELLED=취소. 승인은 challenges[0] 존재로 판단.",
+            },
+            adminReason: { type: "string", nullable: true, description: "거절 사유 (REJECTED일 때)" },
+            processedAt: { type: "string", format: "date-time", nullable: true },
+            createdAt: { type: "string", format: "date-time", description: "신청일" },
+            updatedAt: { type: "string", format: "date-time" },
+            challenges: {
+              type: "array",
+              description: "승인 후 생성된 챌린지. challenges[0].id 로 상세 이동.",
+              items: { type: "object", properties: { id: { type: "integer" } } },
+            },
+            _count: { type: "object", properties: { challenges: { type: "integer" } } },
+            user: {
+              type: "object",
+              properties: {
+                id: { type: "integer" },
+                nickname: { type: "string" },
+                profileImage: { type: "string" },
+              },
+            },
+          },
+        },
+        ChallengeRequestListResponse: {
+          type: "object",
+          properties: {
+            data: {
+              type: "array",
+              items: { $ref: "#/components/schemas/ChallengeRequest" },
+            },
+          },
+        },
+        ChallengeRequestResponse: {
+          type: "object",
+          properties: {
+            data: { $ref: "#/components/schemas/ChallengeRequest" },
           },
         },
         Work: {
@@ -767,16 +820,16 @@ const options = {
     },
     tags: [
       {
+        name: "Health",
+        description: "헬스 체크 API",
+      },
+      {
         name: "Auth",
         description: "인증 관련 API",
       },
       {
         name: "User",
         description: "사용자 관련 API",
-      },
-      {
-        name: "Health",
-        description: "헬스 체크 API",
       },
       {
         name: "Challenge",
@@ -804,6 +857,14 @@ const options = {
 };
 
 const swaggerSpec = swaggerJsdoc(options);
+
+const getServerUrl = (req) => {
+  const xfProto = req.get("x-forwarded-proto");
+  const protocol = xfProto ? xfProto.split(",")[0] : "https";
+  const host = req.get("host");
+  const baseUrl = process.env.API_URL || `${protocol}://${host}`;
+  return `${baseUrl}`;
+};
 
 const ensureNotificationGetPath = (spec) => {
   if (!spec.paths) spec.paths = {};
@@ -937,16 +998,6 @@ const ensureFeedbackListPath = (spec) => {
   }
 
   return spec;
-};
-
-const getServerUrl = (req) => {
-  const xfProto = req.get("x-forwarded-proto");
-  const protocol = xfProto ? xfProto.split(",")[0] : "https";
-  const host = req.get("host");
-
-  const baseUrl = process.env.API_URL || `${protocol}://${host}`;
-
-  return `${baseUrl}`;
 };
 
 const createDynamicSpec = (req) => {

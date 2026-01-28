@@ -485,6 +485,10 @@ export async function listChallengeRequests({ userId, requestStatus }) {
           profileImage: true,
         },
       },
+      challenges: {
+        select: { id: true },
+        take: 1,
+      },
       _count: {
         select: {
           challenges: true,
@@ -505,6 +509,10 @@ export async function getChallengeRequestById(id) {
           nickname: true,
           profileImage: true,
         },
+      },
+      challenges: {
+        select: { id: true },
+        take: 1,
       },
       _count: {
         select: {
