@@ -102,6 +102,7 @@ enum ParticipantStatus {
 
 enum RequestStatus {
   PENDING   // 신청중
+  APPROVED  // 승인
   REJECTED  // 거절
   CANCELLED // 취소
 }
