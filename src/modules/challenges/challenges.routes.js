@@ -951,12 +951,46 @@ router.post("/requests", authenticateToken, createRequest);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
+ *               $ref: '#/components/schemas/ChallengeRequestListResponse'
+ *             examples:
+ *               success:
+ *                 summary: 챌린지 생성 신청 목록 조회 응답 예시
+ *                 value:
+ *                   data:
+ *                     - id: 1
+ *                       userId: 1
+ *                       title: "React 공식 문서 번역 챌린지"
+ *                       sourceUrl: "https://react.dev/learn"
+ *                       field: "프론트엔드"
+ *                       docType: "OFFICIAL_DOCUMENT"
+ *                       deadlineAt: "2024-12-31T23:59:59.000Z"
+ *                       maxParticipants: 10
+ *                       content: "React 공식 문서를 한국어로 번역하는 챌린지입니다."
+ *                       requestStatus: "PENDING"
+ *                       adminReason: null
+ *                       processedAt: null
+ *                       createdAt: "2024-01-15T00:00:00.000Z"
+ *                       updatedAt: "2024-01-15T00:00:00.000Z"
+ *                       challenges: []
+ *                       _count: { challenges: 0 }
+ *                       user: { id: 1, nickname: "홍길동", profileImage: "USER" }
+ *                     - id: 2
+ *                       userId: 1
+ *                       title: "Next.js 블로그 번역 챌린지"
+ *                       sourceUrl: "https://nextjs.org/blog"
+ *                       field: "프론트엔드"
+ *                       docType: "BLOG"
+ *                       maxParticipants: 20
+ *                       deadlineAt: "2024-12-31T23:59:59.000Z"
+ *                       content: "Next.js 공식 블로그 포스트를 번역하는 챌린지입니다."
+ *                       requestStatus: "PENDING"
+ *                       adminReason: null
+ *                       processedAt: null
+ *                       createdAt: "2024-01-10T00:00:00.000Z"
+ *                       updatedAt: "2024-01-10T00:00:00.000Z"
+ *                       challenges: [{ id: 5 }]
+ *                       _count: { challenges: 1 }
+ *                       user: { id: 1, nickname: "홍길동", profileImage: "USER" }
  *       400:
  *         description: 잘못된 요청
  */
@@ -980,6 +1014,10 @@ router.get("/requests", listRequests);
  *     responses:
  *       200:
  *         description: 챌린지 생성 신청 상세 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ChallengeRequestResponse'
  *       400:
  *         description: 잘못된 요청
  *       404:

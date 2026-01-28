@@ -36,7 +36,7 @@ const router = Router();
  *         name: page
  *         schema:
  *           type: integer
- *         description: 페이지 번호 (기본값: 1, 3개씩)
+ *         description: "페이지 번호 (기본값: 1, 3개씩)"
  *         example: 1
  *     responses:
  *       200:
