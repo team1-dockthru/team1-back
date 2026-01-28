@@ -506,14 +506,14 @@ export async function processRequest(req, res, next) {
 
     if (!status || !Object.values(RequestStatus).includes(status)) {
       return res.status(400).json({
-        message: "status는 필수이며 PENDING, REJECTED, CANCELLED 중 하나여야 합니다.",
+        message: "status는 필수이며 PENDING, APPROVED, REJECTED, CANCELLED 중 하나여야 합니다.",
       });
     }
 
-    // PENDING이나 CANCELLED는 처리할 수 없음 (승인/거절만 가능)
-    if (status === RequestStatus.PENDING || status === RequestStatus.CANCELLED) {
+    // APPROVED 또는 REJECTED만 처리 가능 (승인/거절만 가능)
+    if (status !== RequestStatus.APPROVED && status !== RequestStatus.REJECTED) {
       return res.status(400).json({
-        message: "승인 또는 거절만 처리할 수 있습니다.",
+        message: "승인(APPROVED) 또는 거절(REJECTED)만 처리할 수 있습니다.",
       });
     }
 
