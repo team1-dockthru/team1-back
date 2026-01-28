@@ -23,13 +23,13 @@ const router = Router();
  *         name: limit
  *         schema:
  *           type: integer
- *         description: 페이지 크기 (기본값: 10, 최대 50)
+ *         description: "페이지 크기 (기본값: 10, 최대 50)"
  *         example: 10
  *       - in: query
  *         name: includeRead
  *         schema:
  *           type: boolean
- *         description: 읽은 알림 포함 여부 (기본값: false)
+ *         description: "읽은 알림 포함 여부 (기본값: false)"
  *         example: false
  *     responses:
  *       200:

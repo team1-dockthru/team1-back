@@ -1,0 +1,60 @@
+{
+  "info": {
+    "name": "챌린지 참여 신청 예시",
+    "description": "챌린지 참여 신청(참가 신청) API 호출 예시입니다.\n\n**사용 순서:**\n1. 로그인 → `data.token` 값을 복사\n2. 챌린지 참여 신청 요청의 Authorization에 `Bearer {{token}}` 설정 (또는 `token` 변수에 붙여넣기)\n3. 챌린지 ID(`:id`)를 실제 챌린지 ID로 변경 (예: 1)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "challengeId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. 로그인 (토큰 발급)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/login",
+        "description": "로그인 후 응답의 `data.token` 값을 복사하여\n'챌린지 참여 신청' 요청의 Authorization 헤더에 사용하세요."
+      }
+    },
+    {
+      "name": "2. 챌린지 참여 신청",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "로그인 응답의 data.token 값을 여기 넣거나, collection 변수 'token'에 넣으세요."
+          }
+        ],
+        "url": "{{baseUrl}}/challenges/{{challengeId}}/participants",
+        "description": "**챌린지 참여 신청**\n- Method: POST\n- Path: /challenges/:id/participants\n- Body: 없음 (빈 body)\n- 인증: Bearer 토큰 필요\n\n**Path 변수:**\n- id: 챌린지 ID (예: 1)\n\n**성공 (201):**\n```json\n{\n  \"data\": {\n    \"id\": 1,\n    \"userId\": 2,\n    \"challengeId\": 1,\n    \"participantStatus\": \"PENDING\",\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\",\n    \"updatedAt\": \"2024-01-01T00:00:00.000Z\",\n    \"user\": { \"id\": 2, \"nickname\": \"홍길동\", \"profileImage\": \"USER\" }\n  }\n}\n```\n\n**에러 예시:**\n- 400: 이미 참여 신청함 / 최대 인원 도달 / 마감된 챌린지\n- 401: 인증 실패\n- 404: 챌린지를 찾을 수 없음"
+      }
+    }
+  ]
+}
