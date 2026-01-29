@@ -644,21 +644,11 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
     throw Object.assign(new Error("거절 시 거절 사유는 필수입니다."), { status: 400 });
   }
 
-  const updateData = {
-    requestStatus: status,
-    processedAt: new Date(),
-  };
-
-  if (adminReason) {
-    updateData.adminReason = adminReason;
-  }
-
-  // 승인 시 챌린지 자동 생성
+  // 승인 시: 챌린지 생성 후 신청 삭제
   if (status === REQUEST_STATUS.APPROVED) {
-    await prisma.challenge.create({
+    const challenge = await prisma.challenge.create({
       data: {
         userId: existing.userId,
-        challengeRequestId: existing.id,
         title: existing.title,
         sourceUrl: existing.sourceUrl,
         field: existing.field,
@@ -668,10 +658,44 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
         content: existing.content,
         challengeStatus: CHALLENGE_STATUS.IN_PROGRESS,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+            profileImage: true,
+          },
+        },
+        _count: {
+          select: {
+            participants: true,
+            works: true,
+          },
+        },
+      },
     });
+
+    // 신청 데이터 삭제
+    await prisma.challengeRequest.delete({ where: { id } });
+
+    // 생성된 챌린지 반환
+    return {
+      approved: true,
+      challenge,
+    };
   }
 
-  return prisma.challengeRequest.update({
+  // 거절 시: 상태 업데이트
+  const updateData = {
+    requestStatus: status,
+    processedAt: new Date(),
+  };
+
+  if (adminReason) {
+    updateData.adminReason = adminReason;
+  }
+
+  const updatedRequest = await prisma.challengeRequest.update({
     where: { id },
     data: updateData,
     include: {
@@ -682,16 +706,13 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
           profileImage: true,
         },
       },
-      challenges: {
-        select: { id: true },
-      },
-      _count: {
-        select: {
-          challenges: true,
-        },
-      },
     },
   });
+
+  return {
+    approved: false,
+    challengeRequest: updatedRequest,
+  };
 }
 
 // 승인된 ChallengeRequest 중 Challenge가 없는 것들 마이그레이션
