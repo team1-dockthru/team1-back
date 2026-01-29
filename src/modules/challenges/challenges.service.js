@@ -622,6 +622,24 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
     updateData.adminReason = adminReason;
   }
 
+  // 승인 시 챌린지 자동 생성
+  if (status === REQUEST_STATUS.APPROVED) {
+    await prisma.challenge.create({
+      data: {
+        userId: existing.userId,
+        challengeRequestId: existing.id,
+        title: existing.title,
+        sourceUrl: existing.sourceUrl,
+        field: existing.field,
+        docType: existing.docType,
+        deadlineAt: existing.deadlineAt,
+        maxParticipants: existing.maxParticipants,
+        content: existing.content,
+        challengeStatus: CHALLENGE_STATUS.IN_PROGRESS,
+      },
+    });
+  }
+
   return prisma.challengeRequest.update({
     where: { id },
     data: updateData,
@@ -632,6 +650,9 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
           nickname: true,
           profileImage: true,
         },
+      },
+      challenges: {
+        select: { id: true },
       },
       _count: {
         select: {
