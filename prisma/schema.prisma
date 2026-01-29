@@ -90,7 +90,8 @@ enum DocType {
 
 enum ChallengeStatus {
   IN_PROGRESS // 진행중
-  CLOSED      // 마감
+  COMPLETED   // 완료 (마감일 도래)
+  CLOSED      // 마감 (관리자에 의해 강제 마감)
 }
 
 enum ParticipantStatus {

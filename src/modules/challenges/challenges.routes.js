@@ -29,7 +29,7 @@ const router = Router();
  *   get:
  *     tags: [Challenge]
  *     summary: 챌린지 목록 조회
- *     description: 챌린지 목록을 조회합니다. 필터링 옵션을 사용할 수 있습니다.
+ *     description: 챌린지 목록을 조회합니다. 필터링 옵션과 페이지네이션을 사용할 수 있습니다. 마감일이 지난 진행중 챌린지는 자동으로 완료 상태로 변경됩니다.
  *     parameters:
  *       - in: query
  *         name: userId
@@ -41,8 +41,8 @@ const router = Router();
  *         name: challengeStatus
  *         schema:
  *           type: string
- *           enum: [IN_PROGRESS, CLOSED]
- *         description: 챌린지 상태로 필터링
+ *           enum: [IN_PROGRESS, COMPLETED, CLOSED]
+ *         description: 챌린지 상태로 필터링 (IN_PROGRESS=진행중, COMPLETED=완료, CLOSED=관리자 마감)
  *         example: IN_PROGRESS
  *       - in: query
  *         name: field
@@ -57,13 +57,48 @@ const router = Router();
  *           enum: [OFFICIAL_DOCUMENT, BLOG]
  *         description: 문서 타입으로 필터링
  *         example: OFFICIAL_DOCUMENT
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 페이지 번호 (1부터 시작)
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           maximum: 100
+ *         description: 페이지당 항목 수 (최대 100)
+ *         example: 10
  *     responses:
  *       200:
  *         description: 챌린지 목록 조회 성공
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ChallengeListResponse'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Challenge'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 5
+ *                     totalCount:
+ *                       type: integer
+ *                       example: 50
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
  *             examples:
  *               success:
  *                 summary: 챌린지 목록 조회 성공 예제
@@ -89,6 +124,11 @@ const router = Router();
  *                       _count:
  *                         participants: 5
  *                         works: 3
+ *                   pagination:
+ *                     currentPage: 1
+ *                     totalPages: 5
+ *                     totalCount: 50
+ *                     limit: 10
  *       400:
  *         description: 잘못된 요청
  *         content:

@@ -86,9 +86,19 @@ export async function create(req, res, next) {
 
 export async function list(req, res, next) {
   try {
-    const { userId, challengeStatus, field, docType } = req.query || {};
+    const { userId, challengeStatus, field, docType, page, limit } = req.query || {};
 
     const parsedUserId = parseIntStrict(userId);
+    const parsedPage = parseIntStrict(page) || 1;
+    const parsedLimit = parseIntStrict(limit) || 10;
+
+    // 페이지네이션 유효성 검사
+    if (parsedPage < 1) {
+      return res.status(400).json({ message: "page는 1 이상이어야 합니다." });
+    }
+    if (parsedLimit < 1 || parsedLimit > 100) {
+      return res.status(400).json({ message: "limit는 1 이상 100 이하여야 합니다." });
+    }
 
     if (challengeStatus && !Object.values(ChallengeStatus).includes(challengeStatus)) {
       return res.status(400).json({ message: "challengeStatus 값이 올바르지 않습니다." });
@@ -97,14 +107,19 @@ export async function list(req, res, next) {
       return res.status(400).json({ message: "docType 값이 올바르지 않습니다." });
     }
 
-    const challenges = await listChallenges({
+    const result = await listChallenges({
       userId: parsedUserId ?? undefined,
       challengeStatus: challengeStatus || undefined,
       field: field || undefined,
       docType: docType || undefined,
+      page: parsedPage,
+      limit: parsedLimit,
     });
 
-    return res.status(200).json({ data: challenges });
+    return res.status(200).json({
+      data: result.challenges,
+      pagination: result.pagination,
+    });
   } catch (err) {
     next(err);
   }
