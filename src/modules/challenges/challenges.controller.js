@@ -18,6 +18,7 @@ import {
   deleteChallengeRequest,
   processChallengeRequest,
   migrateApprovedRequests,
+  migrateOwnersToParticipants,
   ChallengeStatus,
   DocType,
   ParticipantStatus,
@@ -605,6 +606,21 @@ export async function migrateRequests(req, res, next) {
     }
 
     const result = await migrateApprovedRequests();
+    return res.status(200).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// 기존 챌린지 생성자를 참여자로 등록하는 마이그레이션
+export async function migrateOwners(req, res, next) {
+  try {
+    // 관리자만 실행 가능
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "관리자만 실행할 수 있습니다." });
+    }
+
+    const result = await migrateOwnersToParticipants();
     return res.status(200).json({ data: result });
   } catch (err) {
     next(err);
