@@ -663,6 +663,48 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
   });
 }
 
+// 승인된 ChallengeRequest 중 Challenge가 없는 것들 마이그레이션
+export async function migrateApprovedRequests() {
+  const approvedRequests = await prisma.challengeRequest.findMany({
+    where: {
+      requestStatus: REQUEST_STATUS.APPROVED,
+      challenges: {
+        none: {},
+      },
+    },
+  });
+
+  const results = [];
+
+  for (const request of approvedRequests) {
+    const challenge = await prisma.challenge.create({
+      data: {
+        userId: request.userId,
+        challengeRequestId: request.id,
+        title: request.title,
+        sourceUrl: request.sourceUrl,
+        field: request.field,
+        docType: request.docType,
+        deadlineAt: request.deadlineAt,
+        maxParticipants: request.maxParticipants,
+        content: request.content,
+        challengeStatus: CHALLENGE_STATUS.IN_PROGRESS,
+      },
+    });
+
+    results.push({
+      challengeId: challenge.id,
+      challengeRequestId: request.id,
+      title: request.title,
+    });
+  }
+
+  return {
+    message: `${results.length}개의 Challenge가 생성되었습니다.`,
+    created: results,
+  };
+}
+
 export const ChallengeStatus = CHALLENGE_STATUS;
 export const DocType = DOC_TYPE;
 export const ParticipantStatus = PARTICIPANT_STATUS;
