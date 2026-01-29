@@ -2,6 +2,7 @@ import prisma from "../../config/database.js";
 
 const CHALLENGE_STATUS = {
   IN_PROGRESS: "IN_PROGRESS",
+  COMPLETED: "COMPLETED",
   CLOSED: "CLOSED",
 };
 
@@ -78,7 +79,20 @@ export async function getChallengeById(id) {
   });
 }
 
-export async function listChallenges({ userId, challengeStatus, field, docType }) {
+export async function listChallenges({ userId, challengeStatus, field, docType, page = 1, limit = 10 }) {
+  // 마감일이 지난 IN_PROGRESS 챌린지를 COMPLETED로 자동 업데이트
+  await prisma.challenge.updateMany({
+    where: {
+      challengeStatus: CHALLENGE_STATUS.IN_PROGRESS,
+      deadlineAt: {
+        lt: new Date(),
+      },
+    },
+    data: {
+      challengeStatus: CHALLENGE_STATUS.COMPLETED,
+    },
+  });
+
   const where = {};
 
   if (typeof userId === "number") where.userId = userId;
@@ -86,25 +100,42 @@ export async function listChallenges({ userId, challengeStatus, field, docType }
   if (field) where.field = field;
   if (docType) where.docType = docType;
 
-  return prisma.challenge.findMany({
-    where,
-    include: {
-      user: {
-        select: {
-          id: true,
-          nickname: true,
-          profileImage: true,
+  const skip = (page - 1) * limit;
+
+  const [challenges, totalCount] = await Promise.all([
+    prisma.challenge.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+            profileImage: true,
+          },
+        },
+        _count: {
+          select: {
+            participants: true,
+            works: true,
+          },
         },
       },
-      _count: {
-        select: {
-          participants: true,
-          works: true,
-        },
-      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.challenge.count({ where }),
+  ]);
+
+  return {
+    challenges,
+    pagination: {
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
+      totalCount,
+      limit,
     },
-    orderBy: { createdAt: "desc" },
-  });
+  };
 }
 
 export async function updateChallenge({ id, userId, data }) {
