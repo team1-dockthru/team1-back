@@ -1157,7 +1157,10 @@ router.delete("/requests/:id", authenticateToken, removeRequest);
  *   patch:
  *     tags: [Challenge]
  *     summary: 챌린지 생성 신청 승인/거절
- *     description: 챌린지 생성 신청을 승인하거나 거절합니다. 관리자만 가능하며, 신청중 상태일 때만 처리 가능합니다. 인증이 필요합니다.
+ *     description: |
+ *       챌린지 생성 신청을 승인하거나 거절합니다. 관리자만 가능하며, 신청중 상태일 때만 처리 가능합니다.
+ *       - 승인 시: 챌린지가 자동 생성되고, 신청 데이터는 삭제됩니다.
+ *       - 거절 시: 신청 상태가 REJECTED로 변경됩니다.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -1179,16 +1182,48 @@ router.delete("/requests/:id", authenticateToken, removeRequest);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [REJECTED]
- *                 description: 변경할 신청 상태 (승인은 별도 엔드포인트에서 챌린지 생성으로 처리)
- *                 example: REJECTED
+ *                 enum: [APPROVED, REJECTED]
+ *                 description: 승인(APPROVED) 또는 거절(REJECTED)
+ *                 example: APPROVED
  *               adminReason:
  *                 type: string
  *                 description: 거절 사유 (거절 시 필수)
  *                 example: "내용이 부적절합니다."
+ *           examples:
+ *             approve:
+ *               summary: 승인
+ *               value:
+ *                 status: APPROVED
+ *             reject:
+ *               summary: 거절
+ *               value:
+ *                 status: REJECTED
+ *                 adminReason: "내용이 부적절합니다."
  *     responses:
+ *       201:
+ *         description: 승인 성공 - 챌린지 생성됨 (신청 데이터 삭제)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "챌린지 신청이 승인되어 챌린지가 생성되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/Challenge'
  *       200:
- *         description: 챌린지 생성 신청 처리 성공
+ *         description: 거절 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "챌린지 신청이 거절되었습니다."
+ *                 data:
+ *                   $ref: '#/components/schemas/ChallengeRequest'
  *       400:
  *         description: 잘못된 요청
  *       401:
