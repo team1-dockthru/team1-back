@@ -20,6 +20,7 @@ import {
   removeRequest,
   processRequest,
   migrateRequests,
+  migrateOwners,
 } from "./challenges.controller.js";
 
 const router = Router();
@@ -1346,5 +1347,46 @@ router.patch("/requests/:id/process", authenticateToken, processRequest);
  *         description: 관리자 권한 필요
  */
 router.post("/migrate", authenticateToken, migrateRequests);
+
+/**
+ * @swagger
+ * /challenges/migrate-owners:
+ *   post:
+ *     tags: [Challenge]
+ *     summary: 챌린지 생성자를 참여자로 등록 마이그레이션
+ *     description: 기존 챌린지 생성자 중 참여자로 등록되지 않은 사람들을 참여자(APPROVED)로 등록합니다. 관리자만 실행 가능합니다.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 마이그레이션 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: "3명의 챌린지 생성자가 참여자로 등록되었습니다."
+ *                     registered:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           challengeId:
+ *                             type: integer
+ *                           userId:
+ *                             type: integer
+ *                           title:
+ *                             type: string
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 관리자 권한 필요
+ */
+router.post("/migrate-owners", authenticateToken, migrateOwners);
 
 export default router;

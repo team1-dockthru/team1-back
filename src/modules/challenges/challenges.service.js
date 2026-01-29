@@ -861,6 +861,54 @@ export async function migrateApprovedRequests() {
   };
 }
 
+// 기존 챌린지 생성자를 참여자로 등록하는 마이그레이션
+export async function migrateOwnersToParticipants() {
+  // 참여자로 등록되지 않은 챌린지 생성자 찾기
+  const challenges = await prisma.challenge.findMany({
+    select: {
+      id: true,
+      userId: true,
+      title: true,
+    },
+  });
+
+  const results = [];
+
+  for (const challenge of challenges) {
+    // 이미 참여자로 등록되어 있는지 확인
+    const existingParticipant = await prisma.challengeParticipant.findUnique({
+      where: {
+        userId_challengeId: {
+          userId: challenge.userId,
+          challengeId: challenge.id,
+        },
+      },
+    });
+
+    // 참여자로 등록되어 있지 않으면 등록
+    if (!existingParticipant) {
+      await prisma.challengeParticipant.create({
+        data: {
+          userId: challenge.userId,
+          challengeId: challenge.id,
+          participantStatus: PARTICIPANT_STATUS.APPROVED,
+        },
+      });
+
+      results.push({
+        challengeId: challenge.id,
+        userId: challenge.userId,
+        title: challenge.title,
+      });
+    }
+  }
+
+  return {
+    message: `${results.length}명의 챌린지 생성자가 참여자로 등록되었습니다.`,
+    registered: results,
+  };
+}
+
 export const ChallengeStatus = CHALLENGE_STATUS;
 export const DocType = DOC_TYPE;
 export const ParticipantStatus = PARTICIPANT_STATUS;
