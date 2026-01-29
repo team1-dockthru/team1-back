@@ -522,7 +522,7 @@ export async function processRequest(req, res, next) {
 
     if (!status || !Object.values(RequestStatus).includes(status)) {
       return res.status(400).json({
-        message: "status는 필수이며 PENDING, REJECTED, CANCELLED 중 하나여야 합니다.",
+        message: "status는 필수이며 APPROVED, REJECTED 중 하나여야 합니다.",
       });
     }
 
@@ -533,7 +533,7 @@ export async function processRequest(req, res, next) {
       });
     }
 
-    const challengeRequest = await processChallengeRequest({
+    const result = await processChallengeRequest({
       id,
       userId: req.user.userId,
       role: req.user.role,
@@ -541,7 +541,19 @@ export async function processRequest(req, res, next) {
       adminReason,
     });
 
-    return res.status(200).json({ data: challengeRequest });
+    // 승인 시: 생성된 챌린지 반환 (신청은 삭제됨)
+    if (result.approved) {
+      return res.status(201).json({
+        message: "챌린지 신청이 승인되어 챌린지가 생성되었습니다.",
+        data: result.challenge,
+      });
+    }
+
+    // 거절 시: 업데이트된 신청 반환
+    return res.status(200).json({
+      message: "챌린지 신청이 거절되었습니다.",
+      data: result.challengeRequest,
+    });
   } catch (err) {
     next(err);
   }
