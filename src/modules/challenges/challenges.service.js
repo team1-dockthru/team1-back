@@ -138,6 +138,96 @@ export async function listChallenges({ userId, challengeStatus, field, docType, 
   };
 }
 
+// 나의 챌린지 조회 (내가 생성했거나 참여 중인 챌린지)
+export async function listMyChallenges({ userId, challengeStatus, page = 1, limit = 10 }) {
+  // 마감일이 지난 IN_PROGRESS 챌린지를 COMPLETED로 자동 업데이트
+  try {
+    await prisma.challenge.updateMany({
+      where: {
+        challengeStatus: CHALLENGE_STATUS.IN_PROGRESS,
+        deadlineAt: {
+          lt: new Date(),
+        },
+      },
+      data: {
+        challengeStatus: CHALLENGE_STATUS.COMPLETED,
+      },
+    });
+  } catch (error) {
+    console.warn("챌린지 자동 완료 업데이트 실패:", error.message);
+  }
+
+  // 내가 참여 중인(APPROVED) 챌린지 ID 목록 조회
+  const myParticipations = await prisma.challengeParticipant.findMany({
+    where: {
+      userId,
+      participantStatus: PARTICIPANT_STATUS.APPROVED,
+    },
+    select: {
+      challengeId: true,
+    },
+  });
+
+  const participatingChallengeIds = myParticipations.map((p) => p.challengeId);
+
+  // 내가 생성했거나 참여 중인 챌린지 조회
+  const where = {
+    OR: [
+      { userId }, // 내가 생성한 챌린지
+      { id: { in: participatingChallengeIds } }, // 내가 참여 중인 챌린지
+    ],
+  };
+
+  // 챌린지 상태 필터
+  if (challengeStatus) {
+    where.challengeStatus = challengeStatus;
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [challenges, totalCount] = await Promise.all([
+    prisma.challenge.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+            profileImage: true,
+          },
+        },
+        _count: {
+          select: {
+            participants: true,
+            works: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.challenge.count({ where }),
+  ]);
+
+  // 각 챌린지에 내가 생성자인지, 참여자인지 표시
+  const challengesWithRole = challenges.map((challenge) => ({
+    ...challenge,
+    isOwner: challenge.userId === userId,
+    isParticipant: participatingChallengeIds.includes(challenge.id),
+  }));
+
+  return {
+    challenges: challengesWithRole,
+    pagination: {
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
+      totalCount,
+      limit,
+    },
+  };
+}
+
 export async function updateChallenge({ id, userId, data }) {
   const existing = await prisma.challenge.findUnique({ where: { id } });
 
@@ -644,7 +734,7 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
     throw Object.assign(new Error("거절 시 거절 사유는 필수입니다."), { status: 400 });
   }
 
-  // 승인 시: 챌린지 생성 후 신청 삭제
+  // 승인 시: 챌린지 생성 → 신청자를 참여자로 등록 → 신청 삭제
   if (status === REQUEST_STATUS.APPROVED) {
     const challenge = await prisma.challenge.create({
       data: {
@@ -658,6 +748,23 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
         content: existing.content,
         challengeStatus: CHALLENGE_STATUS.IN_PROGRESS,
       },
+    });
+
+    // 신청자를 챌린지 참여자로 자동 등록 (APPROVED 상태)
+    await prisma.challengeParticipant.create({
+      data: {
+        userId: existing.userId,
+        challengeId: challenge.id,
+        participantStatus: PARTICIPANT_STATUS.APPROVED,
+      },
+    });
+
+    // 신청 데이터 삭제
+    await prisma.challengeRequest.delete({ where: { id } });
+
+    // 생성된 챌린지 다시 조회 (참여자 수 포함)
+    const challengeWithDetails = await prisma.challenge.findUnique({
+      where: { id: challenge.id },
       include: {
         user: {
           select: {
@@ -675,13 +782,10 @@ export async function processChallengeRequest({ id, userId, role, status, adminR
       },
     });
 
-    // 신청 데이터 삭제
-    await prisma.challengeRequest.delete({ where: { id } });
-
     // 생성된 챌린지 반환
     return {
       approved: true,
-      challenge,
+      challenge: challengeWithDetails,
     };
   }
 

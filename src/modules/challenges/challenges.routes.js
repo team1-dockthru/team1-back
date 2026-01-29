@@ -4,6 +4,7 @@ import {
   create,
   getById,
   list,
+  listMy,
   update,
   remove,
   adminDelete,
@@ -137,6 +138,98 @@ const router = Router();
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/", list);
+
+/**
+ * @swagger
+ * /challenges/my:
+ *   get:
+ *     tags: [Challenge]
+ *     summary: 나의 챌린지 목록 조회
+ *     description: |
+ *       내가 생성했거나 참여 중인 챌린지를 모두 조회합니다.
+ *       - isOwner: true - 내가 생성한 챌린지
+ *       - isParticipant: true - 내가 참여 중인 챌린지
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: challengeStatus
+ *         schema:
+ *           type: string
+ *           enum: [IN_PROGRESS, COMPLETED, CLOSED]
+ *         description: 챌린지 상태로 필터링
+ *         example: IN_PROGRESS
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 페이지 번호
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           maximum: 100
+ *         description: 페이지당 항목 수
+ *         example: 10
+ *     responses:
+ *       200:
+ *         description: 나의 챌린지 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Challenge'
+ *                       - type: object
+ *                         properties:
+ *                           isOwner:
+ *                             type: boolean
+ *                             description: 내가 생성한 챌린지인지 여부
+ *                           isParticipant:
+ *                             type: boolean
+ *                             description: 내가 참여 중인 챌린지인지 여부
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     totalCount:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *             examples:
+ *               success:
+ *                 summary: 나의 챌린지 목록 조회 성공 예제
+ *                 value:
+ *                   data:
+ *                     - id: 1
+ *                       title: "내가 만든 챌린지"
+ *                       challengeStatus: "IN_PROGRESS"
+ *                       isOwner: true
+ *                       isParticipant: true
+ *                     - id: 2
+ *                       title: "다른 사람이 만든 챌린지"
+ *                       challengeStatus: "IN_PROGRESS"
+ *                       isOwner: false
+ *                       isParticipant: true
+ *                   pagination:
+ *                     currentPage: 1
+ *                     totalPages: 1
+ *                     totalCount: 2
+ *                     limit: 10
+ *       401:
+ *         description: 인증 실패
+ */
+router.get("/my", authenticateToken, listMy);
 
 /**
  * @swagger

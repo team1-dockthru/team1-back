@@ -2,6 +2,7 @@ import {
   createChallenge,
   getChallengeById,
   listChallenges,
+  listMyChallenges,
   updateChallenge,
   deleteChallenge,
   adminDeleteChallenge,
@@ -112,6 +113,42 @@ export async function list(req, res, next) {
       challengeStatus: challengeStatus || undefined,
       field: field || undefined,
       docType: docType || undefined,
+      page: parsedPage,
+      limit: parsedLimit,
+    });
+
+    return res.status(200).json({
+      data: result.challenges,
+      pagination: result.pagination,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// 나의 챌린지 조회 (내가 생성했거나 참여 중인 챌린지)
+export async function listMy(req, res, next) {
+  try {
+    const { challengeStatus, page, limit } = req.query || {};
+
+    const parsedPage = parseIntStrict(page) || 1;
+    const parsedLimit = parseIntStrict(limit) || 10;
+
+    // 페이지네이션 유효성 검사
+    if (parsedPage < 1) {
+      return res.status(400).json({ message: "page는 1 이상이어야 합니다." });
+    }
+    if (parsedLimit < 1 || parsedLimit > 100) {
+      return res.status(400).json({ message: "limit는 1 이상 100 이하여야 합니다." });
+    }
+
+    if (challengeStatus && !Object.values(ChallengeStatus).includes(challengeStatus)) {
+      return res.status(400).json({ message: "challengeStatus 값이 올바르지 않습니다." });
+    }
+
+    const result = await listMyChallenges({
+      userId: req.user.userId,
+      challengeStatus: challengeStatus || undefined,
       page: parsedPage,
       limit: parsedLimit,
     });
