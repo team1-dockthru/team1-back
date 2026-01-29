@@ -16,6 +16,7 @@ import {
   updateChallengeRequest,
   deleteChallengeRequest,
   processChallengeRequest,
+  migrateApprovedRequests,
   ChallengeStatus,
   DocType,
   ParticipantStatus,
@@ -506,14 +507,14 @@ export async function processRequest(req, res, next) {
 
     if (!status || !Object.values(RequestStatus).includes(status)) {
       return res.status(400).json({
-        message: "status는 필수이며 PENDING, APPROVED, REJECTED, CANCELLED 중 하나여야 합니다.",
+        message: "status는 필수이며 PENDING, REJECTED, CANCELLED 중 하나여야 합니다.",
       });
     }
 
-    // APPROVED 또는 REJECTED만 처리 가능 (승인/거절만 가능)
-    if (status !== RequestStatus.APPROVED && status !== RequestStatus.REJECTED) {
+    // PENDING이나 CANCELLED는 처리할 수 없음 (승인/거절만 가능)
+    if (status === RequestStatus.PENDING || status === RequestStatus.CANCELLED) {
       return res.status(400).json({
-        message: "승인(APPROVED) 또는 거절(REJECTED)만 처리할 수 있습니다.",
+        message: "승인 또는 거절만 처리할 수 있습니다.",
       });
     }
 
@@ -526,6 +527,21 @@ export async function processRequest(req, res, next) {
     });
 
     return res.status(200).json({ data: challengeRequest });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// 승인된 ChallengeRequest 중 Challenge가 없는 것들을 마이그레이션
+export async function migrateRequests(req, res, next) {
+  try {
+    // 관리자만 실행 가능
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "관리자만 실행할 수 있습니다." });
+    }
+
+    const result = await migrateApprovedRequests();
+    return res.status(200).json({ data: result });
   } catch (err) {
     next(err);
   }

@@ -18,6 +18,7 @@ import {
   updateRequest,
   removeRequest,
   processRequest,
+  migrateRequests,
 } from "./challenges.controller.js";
 
 const router = Router();
@@ -115,7 +116,7 @@ router.get("/", list);
  *         name: requestStatus
  *         schema:
  *           type: string
- *           enum: [PENDING, APPROVED, REJECTED, CANCELLED]
+ *           enum: [PENDING, REJECTED, CANCELLED]
  *         description: 신청 상태로 필터링
  *         example: PENDING
  *     responses:
@@ -983,7 +984,7 @@ router.delete("/:id/participants/:participantId", authenticateToken, removeParti
  *                       type: string
  *                     requestStatus:
  *                       type: string
- *                       enum: [PENDING, APPROVED, REJECTED, CANCELLED]
+ *                       enum: [PENDING, REJECTED, CANCELLED]
  *                     createdAt:
  *                       type: string
  *                       format: date-time
@@ -1138,9 +1139,9 @@ router.delete("/requests/:id", authenticateToken, removeRequest);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [APPROVED, REJECTED]
- *                 description: 변경할 신청 상태 (APPROVED=승인, REJECTED=거절)
- *                 example: APPROVED
+ *                 enum: [REJECTED]
+ *                 description: 변경할 신청 상태 (승인은 별도 엔드포인트에서 챌린지 생성으로 처리)
+ *                 example: REJECTED
  *               adminReason:
  *                 type: string
  *                 description: 거절 사유 (거절 시 필수)
@@ -1158,5 +1159,24 @@ router.delete("/requests/:id", authenticateToken, removeRequest);
  *         description: 챌린지 생성 신청을 찾을 수 없음
  */
 router.patch("/requests/:id/process", authenticateToken, processRequest);
+
+/**
+ * @swagger
+ * /challenges/migrate:
+ *   post:
+ *     tags: [Challenge]
+ *     summary: 승인된 챌린지 신청 마이그레이션
+ *     description: 승인된 ChallengeRequest 중 Challenge가 없는 것들에 대해 Challenge를 자동 생성합니다. 관리자만 실행 가능합니다.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 마이그레이션 성공
+ *       401:
+ *         description: 인증 실패
+ *       403:
+ *         description: 관리자 권한 필요
+ */
+router.post("/migrate", authenticateToken, migrateRequests);
 
 export default router;
