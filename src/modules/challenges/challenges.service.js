@@ -946,7 +946,11 @@ export async function migrateWorkersToParticipants() {
     },
   });
 
+  console.log(`[Migration] 발견된 done 작업물 수: ${works.length}`);
+  console.log(`[Migration] 작업물 목록:`, JSON.stringify(works));
+
   const results = [];
+  const skipped = [];
 
   for (const work of works) {
     // 이미 참여자로 등록되어 있는지 확인
@@ -957,23 +961,70 @@ export async function migrateWorkersToParticipants() {
           challengeId: work.challengeId,
         },
       },
+      select: {
+        id: true,
+        participantStatus: true,
+      },
     });
 
-    // 참여자로 등록되어 있지 않으면 등록
+    console.log(`[Migration] Work ${work.id}: userId=${work.userId}, challengeId=${work.challengeId}, existing=${!!existingParticipant}, status=${existingParticipant?.participantStatus}`);
+
+    // 참여자로 등록되어 있지 않으면 새로 생성
     if (!existingParticipant) {
-      await prisma.challengeParticipant.create({
-        data: {
+      try {
+        await prisma.challengeParticipant.create({
+          data: {
+            userId: work.userId,
+            challengeId: work.challengeId,
+            participantStatus: PARTICIPANT_STATUS.APPROVED,
+          },
+        });
+
+        results.push({
+          workId: work.id,
           userId: work.userId,
           challengeId: work.challengeId,
-          participantStatus: PARTICIPANT_STATUS.APPROVED,
-        },
-      });
+          title: work.title,
+          action: "created",
+        });
+        console.log(`[Migration] 참여자 등록 성공: userId=${work.userId}, challengeId=${work.challengeId}`);
+      } catch (err) {
+        console.error(`[Migration] 참여자 등록 실패:`, err);
+      }
+    } else if (existingParticipant.participantStatus !== PARTICIPANT_STATUS.APPROVED) {
+      // APPROVED가 아니면 APPROVED로 업데이트
+      try {
+        await prisma.challengeParticipant.update({
+          where: {
+            userId_challengeId: {
+              userId: work.userId,
+              challengeId: work.challengeId,
+            },
+          },
+          data: {
+            participantStatus: PARTICIPANT_STATUS.APPROVED,
+          },
+        });
 
-      results.push({
+        results.push({
+          workId: work.id,
+          userId: work.userId,
+          challengeId: work.challengeId,
+          title: work.title,
+          action: "updated_to_approved",
+          previousStatus: existingParticipant.participantStatus,
+        });
+        console.log(`[Migration] 참여자 상태 업데이트: userId=${work.userId}, ${existingParticipant.participantStatus} -> APPROVED`);
+      } catch (err) {
+        console.error(`[Migration] 참여자 상태 업데이트 실패:`, err);
+      }
+    } else {
+      skipped.push({
         workId: work.id,
         userId: work.userId,
         challengeId: work.challengeId,
-        title: work.title,
+        reason: "already_approved",
+        currentStatus: existingParticipant.participantStatus,
       });
     }
   }
@@ -981,6 +1032,8 @@ export async function migrateWorkersToParticipants() {
   return {
     message: `${results.length}명의 작업물 제출자가 참여자로 등록되었습니다.`,
     registered: results,
+    skipped: skipped,
+    totalWorks: works.length,
   };
 }
 
