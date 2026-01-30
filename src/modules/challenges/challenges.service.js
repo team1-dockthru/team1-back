@@ -961,11 +961,15 @@ export async function migrateWorkersToParticipants() {
           challengeId: work.challengeId,
         },
       },
+      select: {
+        id: true,
+        participantStatus: true,
+      },
     });
 
-    console.log(`[Migration] Work ${work.id}: userId=${work.userId}, challengeId=${work.challengeId}, existing=${!!existingParticipant}`);
+    console.log(`[Migration] Work ${work.id}: userId=${work.userId}, challengeId=${work.challengeId}, existing=${!!existingParticipant}, status=${existingParticipant?.participantStatus}`);
 
-    // 참여자로 등록되어 있지 않으면 등록
+    // 참여자로 등록되어 있지 않으면 새로 생성
     if (!existingParticipant) {
       try {
         await prisma.challengeParticipant.create({
@@ -981,17 +985,46 @@ export async function migrateWorkersToParticipants() {
           userId: work.userId,
           challengeId: work.challengeId,
           title: work.title,
+          action: "created",
         });
         console.log(`[Migration] 참여자 등록 성공: userId=${work.userId}, challengeId=${work.challengeId}`);
       } catch (err) {
         console.error(`[Migration] 참여자 등록 실패:`, err);
+      }
+    } else if (existingParticipant.participantStatus !== PARTICIPANT_STATUS.APPROVED) {
+      // APPROVED가 아니면 APPROVED로 업데이트
+      try {
+        await prisma.challengeParticipant.update({
+          where: {
+            userId_challengeId: {
+              userId: work.userId,
+              challengeId: work.challengeId,
+            },
+          },
+          data: {
+            participantStatus: PARTICIPANT_STATUS.APPROVED,
+          },
+        });
+
+        results.push({
+          workId: work.id,
+          userId: work.userId,
+          challengeId: work.challengeId,
+          title: work.title,
+          action: "updated_to_approved",
+          previousStatus: existingParticipant.participantStatus,
+        });
+        console.log(`[Migration] 참여자 상태 업데이트: userId=${work.userId}, ${existingParticipant.participantStatus} -> APPROVED`);
+      } catch (err) {
+        console.error(`[Migration] 참여자 상태 업데이트 실패:`, err);
       }
     } else {
       skipped.push({
         workId: work.id,
         userId: work.userId,
         challengeId: work.challengeId,
-        reason: "already_participant",
+        reason: "already_approved",
+        currentStatus: existingParticipant.participantStatus,
       });
     }
   }
