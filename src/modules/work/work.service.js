@@ -20,10 +20,104 @@ export async function createWork({ userId, challengeId, title, content, original
   });
 }
 
-export async function getWorkById(id) {
-  return prisma.work.findUnique({
+export async function getWorkById(id, currentUserId = null) {
+  const work = await prisma.work.findUnique({
     where: { id },
+    include: {
+      user: {
+        select: {
+          id: true,
+          nickname: true,
+          profileImage: true,
+        },
+      },
+      challenge: {
+        select: {
+          id: true,
+          title: true,
+          field: true,
+          docType: true,
+        },
+      },
+      feedbacks: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              nickname: true,
+              profileImage: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 3, // 최초 3개만
+      },
+      _count: {
+        select: {
+          feedbacks: true,
+          likes: true,
+        },
+      },
+    },
   });
+
+  if (!work) return null;
+
+  // 현재 사용자의 좋아요 여부 확인
+  let isLiked = false;
+  if (currentUserId) {
+    const like = await prisma.like.findUnique({
+      where: {
+        userId_workId: {
+          userId: currentUserId,
+          workId: id,
+        },
+      },
+    });
+    isLiked = !!like;
+  }
+
+  // 응답 형식 변환
+  return {
+    id: work.id,
+    title: work.title,
+    content: work.content,
+    originalUrl: work.originalUrl,
+    workStatus: work.workStatus,
+    createdAt: work.createdAt,
+    updatedAt: work.updatedAt,
+    submittedAt: work.submittedAt,
+    // 챌린지 정보
+    field: work.challenge?.field,
+    docType: work.challenge?.docType,
+    challengeId: work.challengeId,
+    challengeTitle: work.challenge?.title,
+    // 작성자 정보
+    author: {
+      id: work.user?.id,
+      nickname: work.user?.nickname,
+      profileImage: work.user?.profileImage,
+    },
+    // 좋아요 정보
+    likeCount: work._count?.likes || 0,
+    isLiked: isLiked,
+    // 피드백 정보
+    feedbacks: work.feedbacks.map((f) => ({
+      id: f.id,
+      content: f.content,
+      createdAt: f.createdAt,
+      author: {
+        id: f.user?.id,
+        nickname: f.user?.nickname,
+        profileImage: f.user?.profileImage,
+      },
+    })),
+    totalFeedbackCount: work._count?.feedbacks || 0,
+    // 본인 작업물 여부
+    isMine: currentUserId ? work.userId === currentUserId : false,
+  };
 }
 
 export async function listWorks({ challengeId, userId, workStatus, page = 1, limit = DEFAULT_PAGE_SIZE }) {

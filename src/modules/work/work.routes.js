@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateToken } from "../../middlewares/auth.middleware.js";
+import { authenticateToken, optionalAuth } from "../../middlewares/auth.middleware.js";
 import { create, getById, list, update, remove } from "./work.controller.js";
 import { feedbackByWorkRouter } from "../feedback/feedback.routes.js";
 import { likeByWorkRouter } from "../like/like.routes.js";
@@ -90,7 +90,7 @@ router.get("/", list);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/:id", getById);
+router.get("/:id", optionalAuth, getById);
 
 /**
  * @swagger
