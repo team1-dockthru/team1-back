@@ -626,3 +626,19 @@ export async function migrateOwners(req, res, next) {
     next(err);
   }
 }
+
+// 작업물 제출자를 참여자로 등록하는 마이그레이션
+export async function migrateWorkers(req, res, next) {
+  try {
+    // 관리자만 실행 가능
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "관리자만 실행할 수 있습니다." });
+    }
+
+    const { migrateWorkersToParticipants } = await import("./challenges.service.js");
+    const result = await migrateWorkersToParticipants();
+    return res.status(200).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+}
