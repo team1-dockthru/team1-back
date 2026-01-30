@@ -946,7 +946,11 @@ export async function migrateWorkersToParticipants() {
     },
   });
 
+  console.log(`[Migration] 발견된 done 작업물 수: ${works.length}`);
+  console.log(`[Migration] 작업물 목록:`, JSON.stringify(works));
+
   const results = [];
+  const skipped = [];
 
   for (const work of works) {
     // 이미 참여자로 등록되어 있는지 확인
@@ -959,21 +963,35 @@ export async function migrateWorkersToParticipants() {
       },
     });
 
+    console.log(`[Migration] Work ${work.id}: userId=${work.userId}, challengeId=${work.challengeId}, existing=${!!existingParticipant}`);
+
     // 참여자로 등록되어 있지 않으면 등록
     if (!existingParticipant) {
-      await prisma.challengeParticipant.create({
-        data: {
+      try {
+        await prisma.challengeParticipant.create({
+          data: {
+            userId: work.userId,
+            challengeId: work.challengeId,
+            participantStatus: PARTICIPANT_STATUS.APPROVED,
+          },
+        });
+
+        results.push({
+          workId: work.id,
           userId: work.userId,
           challengeId: work.challengeId,
-          participantStatus: PARTICIPANT_STATUS.APPROVED,
-        },
-      });
-
-      results.push({
+          title: work.title,
+        });
+        console.log(`[Migration] 참여자 등록 성공: userId=${work.userId}, challengeId=${work.challengeId}`);
+      } catch (err) {
+        console.error(`[Migration] 참여자 등록 실패:`, err);
+      }
+    } else {
+      skipped.push({
         workId: work.id,
         userId: work.userId,
         challengeId: work.challengeId,
-        title: work.title,
+        reason: "already_participant",
       });
     }
   }
@@ -981,6 +999,8 @@ export async function migrateWorkersToParticipants() {
   return {
     message: `${results.length}명의 작업물 제출자가 참여자로 등록되었습니다.`,
     registered: results,
+    skipped: skipped,
+    totalWorks: works.length,
   };
 }
 
