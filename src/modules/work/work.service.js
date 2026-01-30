@@ -62,6 +62,29 @@ export async function updateWork({ id, userId, data }) {
   const updateData = { ...data };
   if (data.workStatus === WORK_STATUS.done) {
     updateData.submittedAt = updateData.submittedAt || new Date();
+    
+    // 작업물 제출 완료 시 챌린지 참여자로 자동 등록
+    // userId를 정수로 변환 (스키마에서 Int 타입)
+    const userIdInt = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+    
+    const existingParticipant = await prisma.challengeParticipant.findUnique({
+      where: {
+        userId_challengeId: {
+          userId: userIdInt,
+          challengeId: existing.challengeId,
+        },
+      },
+    });
+
+    if (!existingParticipant) {
+      await prisma.challengeParticipant.create({
+        data: {
+          challengeId: existing.challengeId,
+          userId: userIdInt,
+          participantStatus: "APPROVED",
+        },
+      });
+    }
   }
   if (data.workStatus === WORK_STATUS.draft) {
     updateData.submittedAt = null;
