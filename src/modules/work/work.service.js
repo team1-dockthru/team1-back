@@ -68,7 +68,7 @@ export async function updateWork({ id, userId, data }) {
   if (data.workStatus === WORK_STATUS.done) {
     updateData.submittedAt = updateData.submittedAt || new Date();
     
-    // 작업물 제출 완료 시 챌린지 참여자로 자동 등록
+    // 작업물 제출 완료 시 챌린지 참여자로 자동 등록 (APPROVED 상태로)
     try {
       const existingParticipant = await prisma.challengeParticipant.findUnique({
         where: {
@@ -77,9 +77,14 @@ export async function updateWork({ id, userId, data }) {
             challengeId: existing.challengeId,
           },
         },
+        select: {
+          id: true,
+          participantStatus: true,
+        },
       });
 
       if (!existingParticipant) {
+        // 참여자가 없으면 새로 생성
         await prisma.challengeParticipant.create({
           data: {
             challengeId: existing.challengeId,
@@ -88,9 +93,23 @@ export async function updateWork({ id, userId, data }) {
           },
         });
         console.log(`[Work] 참여자 등록 완료: userId=${userIdInt}, challengeId=${existing.challengeId}`);
+      } else if (existingParticipant.participantStatus !== "APPROVED") {
+        // 참여자가 있지만 APPROVED가 아니면 APPROVED로 업데이트
+        await prisma.challengeParticipant.update({
+          where: {
+            userId_challengeId: {
+              userId: userIdInt,
+              challengeId: existing.challengeId,
+            },
+          },
+          data: {
+            participantStatus: "APPROVED",
+          },
+        });
+        console.log(`[Work] 참여자 상태 업데이트: userId=${userIdInt}, challengeId=${existing.challengeId}, PENDING -> APPROVED`);
       }
     } catch (err) {
-      console.error(`[Work] 참여자 등록 실패:`, err);
+      console.error(`[Work] 참여자 등록/업데이트 실패:`, err);
       // 참여자 등록 실패해도 작업물 업데이트는 진행
     }
   }
