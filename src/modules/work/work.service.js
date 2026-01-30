@@ -55,7 +55,12 @@ export async function updateWork({ id, userId, data }) {
   if (!existing) {
     throw Object.assign(new Error("작업물을 찾을 수 없습니다."), { status: 404 });
   }
-  if (existing.userId !== userId) {
+  
+  // userId를 정수로 변환 (스키마에서 Int 타입)
+  const userIdInt = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+  
+  // 소유권 비교 (둘 다 Int로 비교)
+  if (existing.userId !== userIdInt) {
     throw Object.assign(new Error("수정 권한이 없습니다."), { status: 403 });
   }
 
@@ -64,26 +69,29 @@ export async function updateWork({ id, userId, data }) {
     updateData.submittedAt = updateData.submittedAt || new Date();
     
     // 작업물 제출 완료 시 챌린지 참여자로 자동 등록
-    // userId를 정수로 변환 (스키마에서 Int 타입)
-    const userIdInt = typeof userId === 'string' ? parseInt(userId, 10) : userId;
-    
-    const existingParticipant = await prisma.challengeParticipant.findUnique({
-      where: {
-        userId_challengeId: {
-          userId: userIdInt,
-          challengeId: existing.challengeId,
-        },
-      },
-    });
-
-    if (!existingParticipant) {
-      await prisma.challengeParticipant.create({
-        data: {
-          challengeId: existing.challengeId,
-          userId: userIdInt,
-          participantStatus: "APPROVED",
+    try {
+      const existingParticipant = await prisma.challengeParticipant.findUnique({
+        where: {
+          userId_challengeId: {
+            userId: userIdInt,
+            challengeId: existing.challengeId,
+          },
         },
       });
+
+      if (!existingParticipant) {
+        await prisma.challengeParticipant.create({
+          data: {
+            challengeId: existing.challengeId,
+            userId: userIdInt,
+            participantStatus: "APPROVED",
+          },
+        });
+        console.log(`[Work] 참여자 등록 완료: userId=${userIdInt}, challengeId=${existing.challengeId}`);
+      }
+    } catch (err) {
+      console.error(`[Work] 참여자 등록 실패:`, err);
+      // 참여자 등록 실패해도 작업물 업데이트는 진행
     }
   }
   if (data.workStatus === WORK_STATUS.draft) {
