@@ -69,9 +69,31 @@ export async function getChallengeById(id) {
           title: true,
         },
       },
+      // 승인된 참여자 목록 포함
+      participants: {
+        where: {
+          participantStatus: "APPROVED",
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              nickname: true,
+              profileImage: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
       _count: {
         select: {
-          participants: true,
+          participants: {
+            where: {
+              participantStatus: "APPROVED",
+            },
+          },
           works: true,
         },
       },
