@@ -931,6 +931,59 @@ export async function migrateOwnersToParticipants() {
   };
 }
 
+// 작업물 제출자를 참여자로 등록하는 마이그레이션 함수
+export async function migrateWorkersToParticipants() {
+  // done 상태의 모든 작업물 조회
+  const works = await prisma.work.findMany({
+    where: {
+      workStatus: "done",
+    },
+    select: {
+      id: true,
+      userId: true,
+      challengeId: true,
+      title: true,
+    },
+  });
+
+  const results = [];
+
+  for (const work of works) {
+    // 이미 참여자로 등록되어 있는지 확인
+    const existingParticipant = await prisma.challengeParticipant.findUnique({
+      where: {
+        userId_challengeId: {
+          userId: work.userId,
+          challengeId: work.challengeId,
+        },
+      },
+    });
+
+    // 참여자로 등록되어 있지 않으면 등록
+    if (!existingParticipant) {
+      await prisma.challengeParticipant.create({
+        data: {
+          userId: work.userId,
+          challengeId: work.challengeId,
+          participantStatus: PARTICIPANT_STATUS.APPROVED,
+        },
+      });
+
+      results.push({
+        workId: work.id,
+        userId: work.userId,
+        challengeId: work.challengeId,
+        title: work.title,
+      });
+    }
+  }
+
+  return {
+    message: `${results.length}명의 작업물 제출자가 참여자로 등록되었습니다.`,
+    registered: results,
+  };
+}
+
 export const ChallengeStatus = CHALLENGE_STATUS;
 export const DocType = DOC_TYPE;
 export const ParticipantStatus = PARTICIPANT_STATUS;
