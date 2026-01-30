@@ -85,7 +85,10 @@ export async function getById(req, res, next) {
       return res.status(400).json({ message: "유효한 work id가 필요합니다." });
     }
 
-    const work = await getWorkById(id);
+    // 현재 사용자 ID (로그인한 경우)
+    const currentUserId = req.user?.userId || null;
+
+    const work = await getWorkById(id, currentUserId);
     if (!work) {
       return res.status(404).json({ message: "작업물을 찾을 수 없습니다." });
     }
